@@ -22,7 +22,7 @@ export type Database = {
           file_path: string | null
           file_size: number | null
           file_type: string | null
-          file_url: string
+          file_url: string | null
           id: string
           is_sample: boolean
           subject_id: string
@@ -36,7 +36,7 @@ export type Database = {
           file_path?: string | null
           file_size?: number | null
           file_type?: string | null
-          file_url: string
+          file_url?: string | null
           id?: string
           is_sample?: boolean
           subject_id: string
@@ -50,7 +50,7 @@ export type Database = {
           file_path?: string | null
           file_size?: number | null
           file_type?: string | null
-          file_url?: string
+          file_url?: string | null
           id?: string
           is_sample?: boolean
           subject_id?: string
