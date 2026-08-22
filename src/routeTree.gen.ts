@@ -10,33 +10,90 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as SearchRouteImport } from './routes/search'
+import { Route as SubjectsIndexRouteImport } from './routes/subjects/index'
+import { Route as SubjectsSubjectIdIndexRouteImport } from './routes/subjects/$subjectId/index'
+import { Route as SubjectsSubjectIdCategoryRouteImport } from './routes/subjects/$subjectId/$category'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SearchRoute = SearchRouteImport.update({
+  id: '/search',
+  path: '/search',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SubjectsIndexRoute = SubjectsIndexRouteImport.update({
+  id: '/subjects/',
+  path: '/subjects/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SubjectsSubjectIdIndexRoute = SubjectsSubjectIdIndexRouteImport.update({
+  id: '/subjects/$subjectId/',
+  path: '/subjects/$subjectId/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SubjectsSubjectIdCategoryRoute =
+  SubjectsSubjectIdCategoryRouteImport.update({
+    id: '/subjects/$subjectId/$category',
+    path: '/subjects/$subjectId/$category',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/search': typeof SearchRoute
+  '/subjects/': typeof SubjectsIndexRoute
+  '/subjects/$subjectId/$category': typeof SubjectsSubjectIdCategoryRoute
+  '/subjects/$subjectId/': typeof SubjectsSubjectIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/search': typeof SearchRoute
+  '/subjects': typeof SubjectsIndexRoute
+  '/subjects/$subjectId/$category': typeof SubjectsSubjectIdCategoryRoute
+  '/subjects/$subjectId': typeof SubjectsSubjectIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/search': typeof SearchRoute
+  '/subjects/': typeof SubjectsIndexRoute
+  '/subjects/$subjectId/$category': typeof SubjectsSubjectIdCategoryRoute
+  '/subjects/$subjectId/': typeof SubjectsSubjectIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/search'
+    | '/subjects/'
+    | '/subjects/$subjectId/$category'
+    | '/subjects/$subjectId/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/search'
+    | '/subjects'
+    | '/subjects/$subjectId/$category'
+    | '/subjects/$subjectId'
+  id:
+    | '__root__'
+    | '/'
+    | '/search'
+    | '/subjects/'
+    | '/subjects/$subjectId/$category'
+    | '/subjects/$subjectId/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  SearchRoute: typeof SearchRoute
+  SubjectsIndexRoute: typeof SubjectsIndexRoute
+  SubjectsSubjectIdCategoryRoute: typeof SubjectsSubjectIdCategoryRoute
+  SubjectsSubjectIdIndexRoute: typeof SubjectsSubjectIdIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +105,43 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/search': {
+      id: '/search'
+      path: '/search'
+      fullPath: '/search'
+      preLoaderRoute: typeof SearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/subjects/': {
+      id: '/subjects/'
+      path: '/subjects'
+      fullPath: '/subjects/'
+      preLoaderRoute: typeof SubjectsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/subjects/$subjectId/': {
+      id: '/subjects/$subjectId/'
+      path: '/subjects/$subjectId'
+      fullPath: '/subjects/$subjectId/'
+      preLoaderRoute: typeof SubjectsSubjectIdIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/subjects/$subjectId/$category': {
+      id: '/subjects/$subjectId/$category'
+      path: '/subjects/$subjectId/$category'
+      fullPath: '/subjects/$subjectId/$category'
+      preLoaderRoute: typeof SubjectsSubjectIdCategoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  SearchRoute: SearchRoute,
+  SubjectsIndexRoute: SubjectsIndexRoute,
+  SubjectsSubjectIdCategoryRoute: SubjectsSubjectIdCategoryRoute,
+  SubjectsSubjectIdIndexRoute: SubjectsSubjectIdIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
