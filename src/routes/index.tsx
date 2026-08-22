@@ -1,24 +1,126 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { SiteFooter, SiteHeader } from "@/components/divhub/site-header";
+import { SearchBox } from "@/components/divhub/search-box";
+import { SubjectCard } from "@/components/divhub/subject-card";
+import {
+  ResourceRow,
+  type ResourceWithSubject,
+} from "@/components/divhub/resource-row";
+import { EmptyState, ErrorState, SkeletonRows } from "@/components/divhub/ui-bits";
+import { recentResourcesQuery, subjectsQuery } from "@/lib/divhub";
 
-// No head() here: the home route inherits title/description/og/twitter from
-// __root.tsx, and ships no og:image so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
 export const Route = createFileRoute("/")({
-  component: Index,
+  head: () => ({
+    meta: [
+      { title: "DIVHUB — Notes, Files, PYQs & Syllabus for your division" },
+      {
+        name: "description",
+        content:
+          "The fastest way for students to find subject notes, files, previous year questions and syllabus. No login, no clutter.",
+      },
+      { property: "og:title", content: "DIVHUB — Your division's resource hub" },
+      {
+        property: "og:description",
+        content:
+          "Open, search and download subject notes, files, PYQs and syllabus in seconds.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+  }),
+  component: Home,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
-function Index() {
+function Home() {
+  const subjects = useQuery(subjectsQuery());
+  const recent = useQuery(recentResourcesQuery(5));
+
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
+    <div className="min-h-screen">
+      <SiteHeader />
+
+      <section className="mesh-gradient border-b border-hairline">
+        <div className="container-page py-16 md:py-24">
+          <p className="eyebrow">Division B · Computer Engineering</p>
+          <h1 className="display-xl mt-3 max-w-2xl">
+            Notes, files, PYQs and syllabus. Nothing else.
+          </h1>
+          <p className="mt-4 max-w-xl text-[16px] leading-6 text-body">
+            Everything your division needs, one click away — no logins, no
+            loading screens, no menus to dig through.
+          </p>
+          <div className="mt-7 max-w-xl">
+            <SearchBox large />
+          </div>
+        </div>
+      </section>
+
+      <main className="container-page py-12">
+        <section aria-labelledby="subjects-heading">
+          <div className="flex items-end justify-between gap-4">
+            <div>
+              <p className="eyebrow">Subjects</p>
+              <h2 id="subjects-heading" className="heading-lg mt-1">
+                Pick a subject
+              </h2>
+            </div>
+            <Link to="/subjects" className="btn-ghost-sm">
+              View all
+            </Link>
+          </div>
+
+          <div className="mt-6">
+            {subjects.isPending ? (
+              <SkeletonRows count={4} />
+            ) : subjects.isError ? (
+              <ErrorState onRetry={() => void subjects.refetch()} />
+            ) : subjects.data.length === 0 ? (
+              <EmptyState
+                title="No subjects yet"
+                description="Subjects will appear here once an admin adds them."
+              />
+            ) : (
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                {subjects.data.map((subject) => (
+                  <SubjectCard key={subject.id} subject={subject} />
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
+
+        <section aria-labelledby="recent-heading" className="mt-16">
+          <p className="eyebrow">Recently added</p>
+          <h2 id="recent-heading" className="heading-lg mt-1">
+            Latest uploads
+          </h2>
+
+          <div className="mt-6 space-y-2">
+            {recent.isPending ? (
+              <SkeletonRows count={3} />
+            ) : recent.isError ? (
+              <ErrorState onRetry={() => void recent.refetch()} />
+            ) : recent.data.length === 0 ? (
+              <EmptyState
+                title="Nothing uploaded yet"
+                description="New notes, files, PYQs and syllabus will show up here."
+              />
+            ) : (
+              recent.data.map((resource) => (
+                <ResourceRow
+                  key={resource.id}
+                  resource={resource as ResourceWithSubject}
+                  showSubject
+                  showCategory
+                />
+              ))
+            )}
+          </div>
+        </section>
+      </main>
+
+      <SiteFooter />
     </div>
   );
 }
