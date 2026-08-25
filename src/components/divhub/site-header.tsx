@@ -13,9 +13,13 @@ export function SiteHeader() {
       <div className="container-page flex h-14 items-center justify-between gap-4">
         <Link
           to="/"
-          className="rounded-sm text-[17px] font-semibold tracking-[-0.6px] text-ink"
+          className="flex items-center gap-2 rounded-sm transition-opacity hover:opacity-90"
         >
-          SPACE
+          <img
+            src="/logo.png"
+            alt="SPACE MITAOE"
+            className="h-8 w-auto object-contain mix-blend-multiply dark:invert dark:mix-blend-screen"
+          />
         </Link>
 
         <nav aria-label="Main" className="flex items-center gap-1 sm:gap-2">
@@ -44,8 +48,14 @@ export function SiteHeader() {
 export function SiteFooter() {
   return (
     <footer className="mt-24 border-t border-hairline">
-      <div className="container-page flex flex-col gap-1 py-10 text-[13px] text-mute">
-        <p className="font-medium text-ink">SPACE</p>
+      <div className="container-page flex flex-col gap-2 py-10 text-[13px] text-mute">
+        <Link to="/" className="w-fit">
+          <img
+            src="/logo.png"
+            alt="SPACE MITAOE"
+            className="h-7 w-auto object-contain mix-blend-multiply dark:invert dark:mix-blend-screen"
+          />
+        </Link>
         <p>Every note. Every PYQ. Every file. One place.</p>
       </div>
     </footer>
