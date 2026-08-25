@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Upload, Trash2, FileText, CheckCircle2, Loader2, ExternalLink } from "lucide-react";
+import { Upload, Trash2, FileText, CheckCircle2, Loader2, ExternalLink, X } from "lucide-react";
 import { SiteFooter, SiteHeader } from "@/components/divhub/site-header";
 import { Breadcrumbs, EmptyState, SkeletonRows } from "@/components/divhub/ui-bits";
 import { createClient } from "@supabase/supabase-js";
@@ -46,6 +46,8 @@ function AdminPage() {
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [adminViewerUrl, setAdminViewerUrl] = useState<string | null>(null);
+  const [adminViewerTitle, setAdminViewerTitle] = useState<string>("");
 
   async function handleUpload(e: React.FormEvent) {
     e.preventDefault();
@@ -145,17 +147,12 @@ function AdminPage() {
     }
   }
 
-  async function handleOpenResource(resource: { file_path?: string | null; file_url?: string | null }) {
-    const tab = window.open("", "_blank");
+  async function handleOpenResource(resource: { title: string; file_path?: string | null; file_url?: string | null }) {
     try {
       const url = await resolveResourceUrl(resource);
-      if (tab) {
-        tab.location.href = url;
-      } else {
-        window.location.href = url;
-      }
+      setAdminViewerUrl(url);
+      setAdminViewerTitle(resource.title);
     } catch (err) {
-      if (tab) tab.close();
       toast.error(err instanceof Error ? err.message : "Could not open file.");
     }
   }
@@ -354,6 +351,41 @@ function AdminPage() {
             </div>
           </div>
         </div>
+
+        {/* Inline PDF Viewer */}
+        {adminViewerUrl ? (
+          <div className="mt-8 rounded-lg border border-hairline overflow-hidden bg-background">
+            <div className="flex items-center justify-between px-4 py-2 border-b border-hairline bg-card">
+              <span className="text-sm font-medium text-ink truncate pr-4">
+                {adminViewerTitle}
+              </span>
+              <div className="flex items-center gap-3 shrink-0">
+                <a
+                  href={adminViewerUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+                >
+                  <ExternalLink className="size-3.5" />
+                  Open in new tab
+                </a>
+                <button
+                  type="button"
+                  onClick={() => { setAdminViewerUrl(null); setAdminViewerTitle(""); }}
+                  className="rounded p-1 text-mute hover:text-ink hover:bg-hairline-soft transition-colors"
+                  aria-label="Close viewer"
+                >
+                  <X className="size-4" />
+                </button>
+              </div>
+            </div>
+            <iframe
+              src={adminViewerUrl}
+              title={adminViewerTitle}
+              style={{ width: "100%", height: "90vh", border: "none" }}
+            />
+          </div>
+        ) : null}
       </main>
       <SiteFooter />
     </div>
