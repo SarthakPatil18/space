@@ -1,5 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { Search, X } from "lucide-react";
 import { SiteFooter, SiteHeader } from "@/components/divhub/site-header";
 import { ResourceRow } from "@/components/divhub/resource-row";
 import {
@@ -41,11 +43,22 @@ function CategoryPage() {
   const { subjectId, category } = Route.useParams();
   const subject = useQuery(subjectQuery(subjectId));
   const resources = useQuery(subjectResourcesQuery(subjectId));
+  const [searchQuery, setSearchQuery] = useState("");
 
   const valid = isCategory(category);
-  const list = valid
-    ? (resources.data ?? []).filter((r) => r.category === category)
+  const allResources = resources.data ?? [];
+  const categoryResources = valid
+    ? allResources.filter((r) => r.category === category)
     : [];
+
+  const list = searchQuery.trim()
+    ? categoryResources.filter(
+        (r) =>
+          r.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (r.description &&
+            r.description.toLowerCase().includes(searchQuery.toLowerCase())),
+      )
+    : categoryResources;
 
   return (
     <div className="min-h-screen">
@@ -57,8 +70,8 @@ function CategoryPage() {
             { label: "Subjects", to: "/subjects" },
             {
               label: subject.data?.code ?? "Subject",
-              to: "/subjects/$subjectId",
-              params: { subjectId },
+              to: "/subjects/$subjectId/$category",
+              params: { subjectId, category: "notes" },
             },
             { label: valid ? CATEGORY_META[category].label : "Unknown" },
           ]}
@@ -67,11 +80,11 @@ function CategoryPage() {
         {!valid ? (
           <EmptyState
             title="Unknown category"
-            description="Pick one of Notes, Files, PYQs or Syllabus."
+            description="Pick one of Notes, Syllabus, PYQs or Files."
             action={
               <Link
-                to="/subjects/$subjectId"
-                params={{ subjectId }}
+                to="/subjects/$subjectId/$category"
+                params={{ subjectId, category: "notes" }}
                 className="btn-primary-sm"
               >
                 Back to subject
@@ -80,29 +93,63 @@ function CategoryPage() {
           />
         ) : (
           <>
-            <p className="eyebrow">{subject.data?.name ?? "Subject"}</p>
-            <h1 className="heading-lg mt-1">{CATEGORY_META[category].label}</h1>
-            <p className="mt-1 text-[14px] text-mute">
-              {CATEGORY_META[category].blurb}
-            </p>
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <p className="eyebrow">
+                  {subject.data?.code ?? "Subject"} · {subject.data?.name ?? ""}
+                </p>
+                <h1 className="heading-lg mt-1">{subject.data?.name ?? "Subject"}</h1>
+                <p className="mt-1 text-[14px] text-mute">
+                  {CATEGORY_META[category].blurb}
+                </p>
+              </div>
 
+              {/* In-Subject Search Bar */}
+              <div className="relative w-full sm:w-72 shrink-0">
+                <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-mute" />
+                <input
+                  type="text"
+                  placeholder={`Search in ${subject.data?.code ?? "subject"}...`}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full rounded-full border border-hairline bg-card py-2 pl-9 pr-8 text-sm text-ink placeholder:text-mute focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+                {searchQuery ? (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery("")}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-mute hover:text-ink"
+                    aria-label="Clear search"
+                  >
+                    <X className="size-3.5" />
+                  </button>
+                ) : null}
+              </div>
+            </div>
+
+            {/* Category Navigation Pills */}
             <nav aria-label="Categories" className="mt-6 flex flex-wrap gap-2">
-              {CATEGORIES.map((c) => (
-                <Link
-                  key={c}
-                  to="/subjects/$subjectId/$category"
-                  params={{ subjectId, category: c }}
-                  className={`rounded-[64px] border px-4 py-1.5 text-sm font-medium transition-colors ${
-                    c === category
-                      ? "border-transparent bg-primary text-primary-foreground"
-                      : "border-hairline bg-card text-ink hover:bg-hairline-soft"
-                  }`}
-                >
-                  {CATEGORY_META[c].label}
-                </Link>
-              ))}
+              {CATEGORIES.map((c) => {
+                const count = allResources.filter((r) => r.category === c).length;
+                return (
+                  <Link
+                    key={c}
+                    to="/subjects/$subjectId/$category"
+                    params={{ subjectId, category: c }}
+                    className={`inline-flex items-center gap-1.5 rounded-full border px-4 py-1.5 text-sm font-medium transition-colors ${
+                      c === category
+                        ? "border-transparent bg-primary text-primary-foreground"
+                        : "border-hairline bg-card text-ink hover:bg-hairline-soft"
+                    }`}
+                  >
+                    <span>{CATEGORY_META[c].label}</span>
+                    <span className="text-xs opacity-75">({count})</span>
+                  </Link>
+                );
+              })}
             </nav>
 
+            {/* Resources List */}
             <div className="mt-6 space-y-2">
               {resources.isPending ? (
                 <SkeletonRows count={4} />
@@ -110,8 +157,16 @@ function CategoryPage() {
                 <ErrorState onRetry={() => void resources.refetch()} />
               ) : list.length === 0 ? (
                 <EmptyState
-                  title={`No ${CATEGORY_META[category].label.toLowerCase()} uploaded yet`}
-                  description="Check back later — this section will fill up as material is added."
+                  title={
+                    searchQuery
+                      ? `No ${CATEGORY_META[category].label.toLowerCase()} matching "${searchQuery}"`
+                      : `No ${CATEGORY_META[category].label.toLowerCase()} uploaded yet`
+                  }
+                  description={
+                    searchQuery
+                      ? "Try searching for a different keyword or clear the search filter."
+                      : "Check back later — this section will fill up as material is added."
+                  }
                 />
               ) : (
                 list.map((resource) => (

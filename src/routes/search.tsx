@@ -90,8 +90,8 @@ function SearchPage() {
                     {results.data.subjects.map((subject) => (
                       <Link
                         key={subject.id}
-                        to="/subjects/$subjectId"
-                        params={{ subjectId: subject.id }}
+                        to="/subjects/$subjectId/$category"
+                        params={{ subjectId: subject.id, category: "notes" }}
                         className="rounded-[64px] border border-hairline bg-card px-4 py-1.5 text-sm font-medium text-ink hover:bg-hairline-soft"
                       >
                         {subject.name}

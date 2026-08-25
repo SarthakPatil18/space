@@ -11,8 +11,8 @@ export function SubjectCard({
 }) {
   return (
     <Link
-      to="/subjects/$subjectId"
-      params={{ subjectId: subject.id }}
+      to="/subjects/$subjectId/$category"
+      params={{ subjectId: subject.id, category: "notes" }}
       className="hairline-card group flex flex-col p-5 transition-shadow hover:shadow-whisper"
     >
       <div className="flex items-center justify-between">

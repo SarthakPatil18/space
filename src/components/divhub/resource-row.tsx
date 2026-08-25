@@ -62,8 +62,8 @@ export function ResourceRow({
             {showSubject && resource.subjects ? (
               <>
                 <Link
-                  to="/subjects/$subjectId"
-                  params={{ subjectId: resource.subjects.id }}
+                  to="/subjects/$subjectId/$category"
+                  params={{ subjectId: resource.subjects.id, category: "notes" }}
                   className="rounded-sm text-body hover:text-ink"
                 >
                   {resource.subjects.name}
