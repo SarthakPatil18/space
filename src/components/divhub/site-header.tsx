@@ -13,7 +13,7 @@ export function SiteHeader() {
       <div className="container-page flex h-16 items-center justify-between gap-4">
         <Link
           to="/"
-          className="flex items-center gap-2 rounded-sm transition-opacity hover:opacity-90 py-1"
+          className="flex items-center gap-2 rounded-sm py-1"
         >
           <img
             src="/logo.png"
