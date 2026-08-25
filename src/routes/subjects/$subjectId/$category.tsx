@@ -19,13 +19,13 @@ import {
 export const Route = createFileRoute("/subjects/$subjectId/$category")({
   head: () => ({
     meta: [
-      { title: "Subject material — DIVHUB" },
+      { title: "Subject material — SPACE" },
       {
         name: "description",
         content:
           "Open or download notes, files, previous year questions and syllabus for this subject.",
       },
-      { property: "og:title", content: "Subject material — DIVHUB" },
+      { property: "og:title", content: "Subject material — SPACE" },
       {
         property: "og:description",
         content: "Open or download material for this subject in one click.",

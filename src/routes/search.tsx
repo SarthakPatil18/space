@@ -23,13 +23,13 @@ export const Route = createFileRoute("/search")({
       : {},
   head: () => ({
     meta: [
-      { title: "Search resources — DIVHUB" },
+      { title: "Search resources — SPACE" },
       {
         name: "description",
         content:
           "Search across every subject for notes, files, previous year questions and syllabus.",
       },
-      { property: "og:title", content: "Search resources — DIVHUB" },
+      { property: "og:title", content: "Search resources — SPACE" },
       {
         property: "og:description",
         content: "Find any note, file, PYQ or syllabus across all subjects.",

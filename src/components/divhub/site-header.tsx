@@ -14,7 +14,7 @@ export function SiteHeader() {
           to="/"
           className="rounded-sm text-[17px] font-semibold tracking-[-0.6px] text-ink"
         >
-          DIVHUB
+          SPACE
         </Link>
 
         <nav aria-label="Main" className="flex items-center gap-1">
@@ -41,7 +41,7 @@ export function SiteFooter() {
   return (
     <footer className="mt-24 border-t border-hairline">
       <div className="container-page flex flex-col gap-1 py-10 text-[13px] text-mute">
-        <p className="font-medium text-ink">DIVHUB</p>
+        <p className="font-medium text-ink">SPACE</p>
         <p>Notes, files, PYQs and syllabus for your division — nothing else.</p>
       </div>
     </footer>

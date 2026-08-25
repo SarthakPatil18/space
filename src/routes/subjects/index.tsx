@@ -13,13 +13,13 @@ import { subjectsQuery } from "@/lib/divhub";
 export const Route = createFileRoute("/subjects/")({
   head: () => ({
     meta: [
-      { title: "All subjects — DIVHUB" },
+      { title: "All subjects — SPACE" },
       {
         name: "description",
         content:
           "Browse every subject in your division and jump straight to its notes, files, PYQs and syllabus.",
       },
-      { property: "og:title", content: "All subjects — DIVHUB" },
+      { property: "og:title", content: "All subjects — SPACE" },
       {
         property: "og:description",
         content: "Every subject in your division, one click from its resources.",

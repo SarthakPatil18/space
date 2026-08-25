@@ -19,13 +19,13 @@ import {
 export const Route = createFileRoute("/subjects/$subjectId/")({
   head: () => ({
     meta: [
-      { title: "Subject resources — DIVHUB" },
+      { title: "Subject resources — SPACE" },
       {
         name: "description",
         content:
           "Notes, files, previous year questions and syllabus for this subject.",
       },
-      { property: "og:title", content: "Subject resources — DIVHUB" },
+      { property: "og:title", content: "Subject resources — SPACE" },
       {
         property: "og:description",
         content: "All notes, files, PYQs and syllabus for this subject.",
@@ -87,7 +87,7 @@ function SubjectPage() {
       ]}
     >
       <p className="eyebrow">
-        {subject.data.code} · Semester {subject.data.semester}
+        Subject · {subject.data.code}
       </p>
       <h1 className="heading-lg mt-1">{subject.data.name}</h1>
       {subject.data.description ? (

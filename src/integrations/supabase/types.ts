@@ -22,9 +22,8 @@ export type Database = {
           file_path: string | null
           file_size: number | null
           file_type: string | null
-          file_url: string | null
           id: string
-          is_sample: boolean
+          section_id: string | null
           subject_id: string
           title: string
           updated_at: string
@@ -36,9 +35,8 @@ export type Database = {
           file_path?: string | null
           file_size?: number | null
           file_type?: string | null
-          file_url?: string | null
           id?: string
-          is_sample?: boolean
+          section_id?: string | null
           subject_id: string
           title: string
           updated_at?: string
@@ -50,9 +48,8 @@ export type Database = {
           file_path?: string | null
           file_size?: number | null
           file_type?: string | null
-          file_url?: string | null
           id?: string
-          is_sample?: boolean
+          section_id?: string | null
           subject_id?: string
           title?: string
           updated_at?: string
@@ -65,59 +62,71 @@ export type Database = {
             referencedRelation: "subjects"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "resources_section_subject_fkey"
+            columns: ["section_id", "subject_id"]
+            isOneToOne: false
+            referencedRelation: "sections"
+            referencedColumns: ["id", "subject_id"]
+          },
+        ]
+      }
+      sections: {
+        Row: {
+          code: string
+          created_at: string
+          id: string
+          name: string
+          subject_id: string
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          id?: string
+          name: string
+          subject_id: string
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          id?: string
+          name?: string
+          subject_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sections_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
         ]
       }
       subjects: {
         Row: {
           code: string
           created_at: string
-          description: string | null
           id: string
-          is_sample: boolean
           name: string
-          semester: number
           updated_at: string
         }
         Insert: {
           code: string
           created_at?: string
-          description?: string | null
           id?: string
-          is_sample?: boolean
           name: string
-          semester?: number
           updated_at?: string
         }
         Update: {
           code?: string
           created_at?: string
-          description?: string | null
           id?: string
-          is_sample?: boolean
           name?: string
-          semester?: number
           updated_at?: string
-        }
-        Relationships: []
-      }
-      user_roles: {
-        Row: {
-          created_at: string
-          id: string
-          role: Database["public"]["Enums"]["app_role"]
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          role: Database["public"]["Enums"]["app_role"]
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          role?: Database["public"]["Enums"]["app_role"]
-          user_id?: string
         }
         Relationships: []
       }
@@ -125,17 +134,8 @@ export type Database = {
     Views: {
       [_ in never]: never
     }
-    Functions: {
-      has_role: {
-        Args: {
-          _role: Database["public"]["Enums"]["app_role"]
-          _user_id: string
-        }
-        Returns: boolean
-      }
-    }
+    Functions: {}
     Enums: {
-      app_role: "admin"
       resource_category: "notes" | "files" | "pyqs" | "syllabus"
     }
     CompositeTypes: {
@@ -260,12 +260,3 @@ export type CompositeTypes<
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
     ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
-
-export const Constants = {
-  public: {
-    Enums: {
-      app_role: ["admin"],
-      resource_category: ["notes", "files", "pyqs", "syllabus"],
-    },
-  },
-} as const

@@ -40,7 +40,6 @@ export const subjectsQuery = () =>
       const { data, error } = await supabase
         .from("subjects")
         .select("*")
-        .order("semester")
         .order("name");
       return unwrap(data, error);
     },
@@ -186,7 +185,12 @@ export async function resolveResourceUrl(
     if (error || !data?.signedUrl) {
       throw new DivhubError("This file is no longer available.");
     }
-    return data.signedUrl;
+    const signedUrl = data.signedUrl;
+    if (signedUrl.startsWith("http://") || signedUrl.startsWith("https://")) {
+      return signedUrl;
+    }
+    const baseUrl = import.meta.env.VITE_SUPABASE_URL || "https://jykszzfxpqmjsnepqwhd.supabase.co";
+    return `${baseUrl}${signedUrl.startsWith("/") ? "" : "/"}${signedUrl}`;
   }
   if (resource.file_url) return resource.file_url;
   throw new DivhubError("This resource has no file attached.");
