@@ -102,11 +102,14 @@ CREATE POLICY "Allow resource deletes" ON public.resources FOR DELETE TO anon, a
 
 -- 10. Storage Bucket Setup
 INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-VALUES ('resources', 'resources', false, 20971520, ARRAY['application/pdf'])
+VALUES ('resources', 'resources', true, 20971520, ARRAY['application/pdf'])
 ON CONFLICT (id) DO UPDATE SET
-  public = false,
+  public = true,
   file_size_limit = 20971520,
   allowed_mime_types = ARRAY['application/pdf'];
+
+DROP POLICY IF EXISTS "Allow storage reads" ON storage.objects;
+CREATE POLICY "Allow storage reads" ON storage.objects FOR SELECT TO anon, authenticated USING (bucket_id = 'resources');
 
 DROP POLICY IF EXISTS "Allow storage uploads" ON storage.objects;
 CREATE POLICY "Allow storage uploads" ON storage.objects FOR INSERT TO anon, authenticated WITH CHECK (bucket_id = 'resources');

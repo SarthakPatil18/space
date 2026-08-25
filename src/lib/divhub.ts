@@ -174,24 +174,37 @@ export function formatDate(iso: string): string {
   });
 }
 
-/** Resolves the openable URL for a resource (signed URL for uploaded files). */
+/** Resolves the openable URL for a resource (signed URL or public URL for uploaded files). */
 export async function resolveResourceUrl(
   resource: { file_path?: string | null; file_url?: string | null },
 ): Promise<string> {
   if (resource.file_path) {
-    const { data, error } = await supabase.storage
+    const { data: signedData, error: signedError } = await supabase.storage
       .from("resources")
       .createSignedUrl(resource.file_path, 3600);
-    if (error || !data?.signedUrl) {
-      throw new DivhubError("This file is no longer available.");
+
+    if (!signedError && signedData?.signedUrl) {
+      const signedUrl = signedData.signedUrl;
+      if (signedUrl.startsWith("http://") || signedUrl.startsWith("https://")) {
+        return signedUrl;
+      }
+      const baseUrl =
+        (import.meta.env['VITE_SUPABASE_URL'] as string | undefined) ||
+        "https://jykszzfxpqmjsnepqwhd.supabase.co";
+      return `${baseUrl}${signedUrl.startsWith("/") ? "" : "/"}${signedUrl}`;
     }
-    const signedUrl = data.signedUrl;
-    if (signedUrl.startsWith("http://") || signedUrl.startsWith("https://")) {
-      return signedUrl;
+
+    // Direct public URL fallback for public storage objects
+    const { data: publicData } = supabase.storage
+      .from("resources")
+      .getPublicUrl(resource.file_path);
+
+    if (publicData?.publicUrl) {
+      return publicData.publicUrl;
     }
-    const baseUrl = (import.meta.env['VITE_SUPABASE_URL'] as string | undefined) || "https://jykszzfxpqmjsnepqwhd.supabase.co";
-    return `${baseUrl}${signedUrl.startsWith("/") ? "" : "/"}${signedUrl}`;
   }
-  if (resource.file_url && typeof resource.file_url === "string") return resource.file_url;
+
+  if (resource.file_url && typeof resource.file_url === "string")
+    return resource.file_url;
   throw new DivhubError("This resource has no file attached.");
 }
