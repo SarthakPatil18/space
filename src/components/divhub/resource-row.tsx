@@ -84,11 +84,6 @@ export function ResourceRow({
             </>
           ) : null}
           <span>{formatDate(resource.created_at)}</span>
-          {resource.is_sample ? (
-            <span className="rounded-full border border-hairline px-1.5 py-px font-mono text-[10px] uppercase text-faint">
-              sample
-            </span>
-          ) : null}
         </p>
       </div>
 

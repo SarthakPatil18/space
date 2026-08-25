@@ -17,16 +17,10 @@ export function SubjectCard({
     >
       <div className="flex items-center justify-between">
         <span className="eyebrow">{subject.code}</span>
-        <span className="text-[12px] text-faint">Sem {subject.semester}</span>
       </div>
       <h3 className="mt-3 text-[17px] font-semibold leading-6 tracking-[-0.4px] text-ink">
         {subject.name}
       </h3>
-      {subject.description ? (
-        <p className="mt-1.5 line-clamp-2 text-[13px] text-mute">
-          {subject.description}
-        </p>
-      ) : null}
       <span className="mt-4 flex items-center gap-1 text-[13px] font-medium text-ink">
         {typeof count === "number"
           ? `${count} resource${count === 1 ? "" : "s"}`

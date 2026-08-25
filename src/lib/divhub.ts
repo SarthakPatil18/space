@@ -176,7 +176,7 @@ export function formatDate(iso: string): string {
 
 /** Resolves the openable URL for a resource (signed URL for uploaded files). */
 export async function resolveResourceUrl(
-  resource: Pick<Resource, "file_path" | "file_url">,
+  resource: { file_path?: string | null; file_url?: string | null },
 ): Promise<string> {
   if (resource.file_path) {
     const { data, error } = await supabase.storage
@@ -189,9 +189,9 @@ export async function resolveResourceUrl(
     if (signedUrl.startsWith("http://") || signedUrl.startsWith("https://")) {
       return signedUrl;
     }
-    const baseUrl = import.meta.env.VITE_SUPABASE_URL || "https://jykszzfxpqmjsnepqwhd.supabase.co";
+    const baseUrl = (import.meta.env['VITE_SUPABASE_URL'] as string | undefined) || "https://jykszzfxpqmjsnepqwhd.supabase.co";
     return `${baseUrl}${signedUrl.startsWith("/") ? "" : "/"}${signedUrl}`;
   }
-  if (resource.file_url) return resource.file_url;
+  if (resource.file_url && typeof resource.file_url === "string") return resource.file_url;
   throw new DivhubError("This resource has no file attached.");
 }

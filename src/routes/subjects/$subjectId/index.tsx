@@ -90,11 +90,6 @@ function SubjectPage() {
         Subject · {subject.data.code}
       </p>
       <h1 className="heading-lg mt-1">{subject.data.name}</h1>
-      {subject.data.description ? (
-        <p className="mt-2 max-w-2xl text-[15px] text-body">
-          {subject.data.description}
-        </p>
-      ) : null}
 
       <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {CATEGORIES.map((category) => (
