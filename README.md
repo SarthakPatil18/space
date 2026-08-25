@@ -962,17 +962,7 @@ The final product should feel like the fastest, simplest way for a student in th
 
 Do not optimize for feature count.
 
-Optimize for speed, clarity, and usefulness.
-
-This project was built with [Lovable](https://lovable.dev).
-
-## Build with Lovable
-
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/34a4fcab-e994-40f6-9672-c38441fda68b).
-
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
+This project is built for MITAOE students.
 
 ## Development
 
