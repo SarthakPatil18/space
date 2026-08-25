@@ -123,7 +123,7 @@ export const searchQuery = (term: string) =>
         supabase
           .from("subjects")
           .select("*")
-          .or(`name.ilike.${like},code.ilike.${like},description.ilike.${like}`)
+          .or(`name.ilike.${like},code.ilike.${like}`)
           .limit(20),
       ]);
 

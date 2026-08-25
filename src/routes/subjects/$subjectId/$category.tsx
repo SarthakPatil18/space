@@ -51,12 +51,13 @@ function CategoryPage() {
     ? allResources.filter((r) => r.category === category)
     : [];
 
-  const list = searchQuery.trim()
-    ? categoryResources.filter(
+  const query = searchQuery.trim().toLowerCase();
+  const list = query
+    ? allResources.filter(
         (r) =>
-          r.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          (r.description &&
-            r.description.toLowerCase().includes(searchQuery.toLowerCase())),
+          r.title.toLowerCase().includes(query) ||
+          (r.file_path && r.file_path.toLowerCase().includes(query)) ||
+          (r.description && r.description.toLowerCase().includes(query)),
       )
     : categoryResources;
 
@@ -167,7 +168,11 @@ function CategoryPage() {
                 />
               ) : (
                 list.map((resource) => (
-                  <ResourceRow key={resource.id} resource={resource} />
+                  <ResourceRow
+                    key={resource.id}
+                    resource={resource}
+                    showCategory={Boolean(query)}
+                  />
                 ))
               )}
             </div>
