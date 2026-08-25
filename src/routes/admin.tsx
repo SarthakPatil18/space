@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Upload, Trash2, FileText, CheckCircle2, Loader2 } from "lucide-react";
+import { Upload, Trash2, FileText, CheckCircle2, Loader2, ExternalLink } from "lucide-react";
 import { SiteFooter, SiteHeader } from "@/components/divhub/site-header";
 import { Breadcrumbs, EmptyState, SkeletonRows } from "@/components/divhub/ui-bits";
 import { createClient } from "@supabase/supabase-js";
@@ -15,6 +15,7 @@ import {
   type Category,
   formatFileSize,
   formatDate,
+  resolveResourceUrl,
 } from "@/lib/divhub";
 
 const getAdminClient = () => {
@@ -141,6 +142,15 @@ function AdminPage() {
       toast.error("Failed to delete resource.");
     } finally {
       setDeletingId(null);
+    }
+  }
+
+  async function handleOpenResource(resource: { file_path?: string | null; file_url?: string | null }) {
+    try {
+      const url = await resolveResourceUrl(resource);
+      window.open(url, "_blank", "noopener,noreferrer");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not open file.");
     }
   }
 
@@ -307,19 +317,30 @@ function AdminPage() {
                         </p>
                       </div>
 
-                      <button
-                        type="button"
-                        onClick={() => void handleDelete(r.id, r.file_path)}
-                        disabled={deletingId === r.id}
-                        className="rounded p-1.5 text-mute hover:bg-destructive/10 hover:text-destructive transition-colors"
-                        title="Delete resource"
-                      >
-                        {deletingId === r.id ? (
-                          <Loader2 className="size-4 animate-spin" />
-                        ) : (
-                          <Trash2 className="size-4" />
-                        )}
-                      </button>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => void handleOpenResource(r)}
+                          className="btn-primary-sm py-1 px-2.5 text-xs"
+                          title="Open PDF in new tab"
+                        >
+                          <ExternalLink className="size-3.5" />
+                          Open
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => void handleDelete(r.id, r.file_path)}
+                          disabled={deletingId === r.id}
+                          className="rounded p-1.5 text-mute hover:bg-destructive/10 hover:text-destructive transition-colors"
+                          title="Delete resource"
+                        >
+                          {deletingId === r.id ? (
+                            <Loader2 className="size-4 animate-spin" />
+                          ) : (
+                            <Trash2 className="size-4" />
+                          )}
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
