@@ -54,6 +54,13 @@ function AdminPage() {
   const [bulkFiles, setBulkFiles] = useState<File[]>([]);
   const [bulkProgress, setBulkProgress] = useState<{ current: number; total: number; currentFileName: string } | null>(null);
 
+function getFileExtType(filename: string): string {
+  const ext = filename.split(".").pop()?.toLowerCase() ?? "";
+  if (["png", "jpg", "jpeg", "webp", "gif", "svg"].includes(ext)) return "image";
+  if (["ppt", "pptx", "key"].includes(ext)) return "ppt";
+  return "pdf";
+}
+
   async function handleUpload(e: React.FormEvent) {
     e.preventDefault();
     if (!selectedSubjectId) {
@@ -84,7 +91,7 @@ function AdminPage() {
         .upload(filePath, file, {
           cacheControl: "3600",
           upsert: true,
-          contentType: file.type || "application/pdf",
+          contentType: file.type || "application/octet-stream",
         });
 
       if (storageError) {
@@ -97,7 +104,7 @@ function AdminPage() {
         title: title.trim(),
         category: selectedCategory,
         file_path: filePath,
-        file_type: "pdf",
+        file_type: getFileExtType(file.name),
         file_size: file.size,
         description: description.trim() || null,
       });
@@ -130,7 +137,7 @@ function AdminPage() {
       return;
     }
     if (bulkFiles.length === 0) {
-      toast.error("Please select at least one PDF file.");
+      toast.error("Please select at least one file.");
       return;
     }
 
@@ -159,7 +166,7 @@ function AdminPage() {
           .upload(filePath, f, {
             cacheControl: "3600",
             upsert: true,
-            contentType: f.type || "application/pdf",
+            contentType: f.type || "application/octet-stream",
           });
 
         if (storageError) throw storageError;
@@ -169,7 +176,7 @@ function AdminPage() {
           title: derivedTitle,
           category: selectedCategory,
           file_path: filePath,
-          file_type: "pdf",
+          file_type: getFileExtType(f.name),
           file_size: f.size,
         });
 
@@ -323,12 +330,12 @@ function AdminPage() {
                 <form onSubmit={handleBulkUpload} className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-ink mb-1.5">
-                      Select PDF Files * (Multi-selection allowed)
+                      Select Files * (PDF, PPT, PPTX, Photos - Multi-selection allowed)
                     </label>
                     <input
                       type="file"
                       multiple
-                      accept="application/pdf,.pdf"
+                      accept=".pdf,.ppt,.pptx,.jpg,.jpeg,.png,.webp,application/pdf,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,image/*"
                       onChange={(e) =>
                         setBulkFiles(Array.from(e.target.files ?? []))
                       }
@@ -390,7 +397,7 @@ function AdminPage() {
                     ) : (
                       <>
                         <Upload className="size-4" />
-                        Upload {bulkFiles.length > 0 ? `${bulkFiles.length} PDF${bulkFiles.length > 1 ? "s" : ""}` : "PDFs"} in Bulk
+                        Upload {bulkFiles.length > 0 ? `${bulkFiles.length} File${bulkFiles.length > 1 ? "s" : ""}` : "Files"} in Bulk
                       </>
                     )}
                   </button>
@@ -427,11 +434,11 @@ function AdminPage() {
 
                   <div>
                     <label className="block text-sm font-medium text-ink mb-1.5">
-                      PDF File * (Max 20MB)
+                      File * (PDF, PPT, PPTX, Photo - Max 50MB)
                     </label>
                     <input
                       type="file"
-                      accept="application/pdf,.pdf"
+                      accept=".pdf,.ppt,.pptx,.jpg,.jpeg,.png,.webp,application/pdf,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,image/*"
                       onChange={(e) => setFile(e.target.files?.[0] ?? null)}
                       required
                       className="w-full text-sm text-mute file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 cursor-pointer"

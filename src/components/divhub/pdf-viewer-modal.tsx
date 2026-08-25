@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Download, ExternalLink, Loader2, X, AlertCircle } from "lucide-react";
+import { Download, ExternalLink, Loader2, X, AlertCircle, FileText, Image as ImageIcon, Presentation } from "lucide-react";
 import { resolveResourceUrl, type Resource } from "@/lib/divhub";
 
 export type ModalResource = {
@@ -9,6 +9,13 @@ export type ModalResource = {
   file_url?: string | null;
   file_size?: number | null;
 } | null;
+
+function getFileType(fileOrPath: string): "image" | "ppt" | "pdf" {
+  const ext = fileOrPath.split(".").pop()?.toLowerCase() ?? "";
+  if (["png", "jpg", "jpeg", "webp", "gif", "svg"].includes(ext)) return "image";
+  if (["ppt", "pptx", "key"].includes(ext)) return "ppt";
+  return "pdf";
+}
 
 export function PdfViewerModal({
   resource,
@@ -21,7 +28,7 @@ export function PdfViewerModal({
   const [error, setError] = useState<string | null>(null);
   const [url, setUrl] = useState<string | null>(null);
 
-  // Requirement 5 & 10: Lock background scroll & handle Escape key
+  // Lock background scroll & handle Escape key
   useEffect(() => {
     if (!resource) return;
 
@@ -39,7 +46,7 @@ export function PdfViewerModal({
     };
   }, [resource, onClose]);
 
-  // Requirement 1, 5, 6 & 7: Fetch signed URL dynamically without caching
+  // Fetch signed URL / public URL dynamically
   useEffect(() => {
     if (!resource) {
       setUrl(null);
@@ -63,7 +70,7 @@ export function PdfViewerModal({
       .catch((err) => {
         if (isMounted) {
           setError(
-            err instanceof Error ? err.message : "Failed to load PDF preview.",
+            err instanceof Error ? err.message : "Failed to load document preview.",
           );
           setLoading(false);
         }
@@ -76,8 +83,9 @@ export function PdfViewerModal({
 
   if (!resource) return null;
 
+  const fileType = getFileType(resource.file_path || resource.title);
+
   return (
-    // Requirement 2 & 5: Dark semi-transparent backdrop covering viewport; click backdrop to close
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black animate-in fade-in duration-200"
       onClick={onClose}
@@ -86,18 +94,24 @@ export function PdfViewerModal({
         className="relative flex h-screen w-screen flex-col bg-card overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Requirement 4: Modal header/toolbar with title, fallback link, download, and close button */}
+        {/* Modal Header */}
         <div className="flex items-center justify-between border-b border-hairline px-4 py-3 sm:px-6 bg-background shrink-0">
           <div className="min-w-0 flex-1 pr-4">
-            <h2 className="truncate text-base sm:text-lg font-semibold text-ink">
-              {resource.title}
+            <h2 className="truncate text-base sm:text-lg font-semibold text-ink flex items-center gap-2">
+              {fileType === "image" ? (
+                <ImageIcon className="size-5 text-primary shrink-0" />
+              ) : fileType === "ppt" ? (
+                <Presentation className="size-5 text-primary shrink-0" />
+              ) : (
+                <FileText className="size-5 text-primary shrink-0" />
+              )}
+              <span className="truncate">{resource.title}</span>
             </h2>
           </div>
 
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             {url ? (
               <>
-                {/* Requirement 4: Required fallback link for mobile browsers/webviews */}
                 <a
                   href={url}
                   target="_blank"
@@ -120,12 +134,11 @@ export function PdfViewerModal({
                 </a>
               </>
             ) : null}
-            {/* Requirement 5: X close button */}
             <button
               type="button"
               onClick={onClose}
               className="rounded-lg p-2 text-mute hover:bg-hairline-soft hover:text-ink transition-colors"
-              aria-label="Close PDF Preview"
+              aria-label="Close Preview"
             >
               <X className="size-5" />
             </button>
@@ -133,15 +146,13 @@ export function PdfViewerModal({
         </div>
 
         {/* Modal Body Container */}
-        <div className="relative flex-1 bg-black/5 w-full h-full overflow-hidden flex items-center justify-center">
-          {/* Requirement 6: Loading state spinner */}
+        <div className="relative flex-1 bg-black/10 w-full h-full overflow-hidden flex items-center justify-center p-4">
           {loading ? (
             <div className="flex flex-col items-center justify-center p-8 text-center space-y-3">
               <Loader2 className="size-8 animate-spin text-primary" />
-              <p className="text-sm font-medium text-mute">Loading PDF preview...</p>
+              <p className="text-sm font-medium text-mute">Loading document preview...</p>
             </div>
           ) : error ? (
-            /* Requirement 7: Clear error state with available close button */
             <div className="flex flex-col items-center justify-center p-8 text-center max-w-md space-y-3">
               <AlertCircle className="size-10 text-destructive" />
               <h3 className="text-base font-semibold text-ink">
@@ -157,12 +168,27 @@ export function PdfViewerModal({
               </button>
             </div>
           ) : url ? (
-            /* Requirement 3: Render in native browser <iframe> */
-            <iframe
-              src={url}
-              title={resource.title}
-              className="h-full w-full border-0"
-            />
+            fileType === "image" ? (
+              <div className="flex items-center justify-center h-full w-full overflow-auto">
+                <img
+                  src={url}
+                  alt={resource.title}
+                  className="max-h-full max-w-full object-contain rounded-lg shadow-2xl border border-hairline"
+                />
+              </div>
+            ) : fileType === "ppt" ? (
+              <iframe
+                src={`https://docs.google.com/gview?url=${encodeURIComponent(url)}&embedded=true`}
+                title={resource.title}
+                className="h-full w-full border-0 rounded"
+              />
+            ) : (
+              <iframe
+                src={url}
+                title={resource.title}
+                className="h-full w-full border-0"
+              />
+            )
           ) : null}
         </div>
       </div>
