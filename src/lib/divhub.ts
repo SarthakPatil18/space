@@ -6,16 +6,16 @@ export type Subject = Database["public"]["Tables"]["subjects"]["Row"];
 export type Resource = Database["public"]["Tables"]["resources"]["Row"];
 export type Category = Database["public"]["Enums"]["resource_category"];
 
-export const CATEGORIES: Category[] = ["notes", "files", "pyqs", "syllabus"];
+export const CATEGORIES: Category[] = ["notes", "syllabus", "pyqs", "files"];
 
 export const CATEGORY_META: Record<
   Category,
   { label: string; blurb: string }
 > = {
   notes: { label: "Notes", blurb: "Lecture and handwritten notes" },
-  files: { label: "Files", blurb: "Other subject material" },
-  pyqs: { label: "PYQs", blurb: "Previous year question papers" },
   syllabus: { label: "Syllabus", blurb: "Official syllabus documents" },
+  pyqs: { label: "PYQs", blurb: "Previous year question papers" },
+  files: { label: "Files", blurb: "Other subject material" },
 };
 
 export function isCategory(value: string): value is Category {
