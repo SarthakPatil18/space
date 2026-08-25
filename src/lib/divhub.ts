@@ -181,7 +181,7 @@ export async function resolveResourceUrl(
   if (resource.file_path) {
     const { data, error } = await supabase.storage
       .from("resources")
-      .createSignedUrl(resource.file_path, 60 * 60);
+      .createSignedUrl(resource.file_path, 60 * 60, { download: false });
     if (error || !data?.signedUrl) {
       throw new DivhubError("This file is no longer available.");
     }
