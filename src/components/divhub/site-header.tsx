@@ -10,15 +10,15 @@ const navLinks = [
 export function SiteHeader() {
   return (
     <header className="sticky top-0 z-30 border-b border-hairline bg-background/85 backdrop-blur">
-      <div className="container-page flex h-14 items-center justify-between gap-4">
+      <div className="container-page flex h-16 items-center justify-between gap-4">
         <Link
           to="/"
-          className="flex items-center gap-2 rounded-sm transition-opacity hover:opacity-90"
+          className="flex items-center gap-2 rounded-sm transition-opacity hover:opacity-90 py-1"
         >
           <img
             src="/logo.png"
             alt="SPACE MITAOE"
-            className="h-8 w-auto object-contain mix-blend-multiply dark:invert dark:mix-blend-screen"
+            className="h-10 sm:h-11 w-auto object-contain dark:invert transition-all"
           />
         </Link>
 
@@ -28,7 +28,7 @@ export function SiteHeader() {
               key={link.to}
               to={link.to}
               activeOptions={{ exact: link.to === "/" }}
-              className="rounded-full px-3 py-1.5 text-sm text-body transition-colors hover:bg-hairline-soft hover:text-ink data-[status=active]:text-ink"
+              className="rounded-full px-3.5 py-1.5 text-sm font-medium text-body transition-colors hover:bg-hairline-soft hover:text-ink data-[status=active]:text-ink"
             >
               {link.label}
             </Link>
@@ -53,7 +53,7 @@ export function SiteFooter() {
           <img
             src="/logo.png"
             alt="SPACE MITAOE"
-            className="h-7 w-auto object-contain mix-blend-multiply dark:invert dark:mix-blend-screen"
+            className="h-8 w-auto object-contain dark:invert transition-all"
           />
         </Link>
         <p>Every note. Every PYQ. Every file. One place.</p>
