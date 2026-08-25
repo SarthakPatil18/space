@@ -95,10 +95,7 @@ function CategoryPage() {
           <>
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
               <div>
-                <p className="eyebrow">
-                  {subject.data?.code ?? "Subject"} · {subject.data?.name ?? ""}
-                </p>
-                <h1 className="heading-lg mt-1">{subject.data?.name ?? "Subject"}</h1>
+                <h1 className="heading-lg">{subject.data?.name ?? "Subject"}</h1>
                 <p className="mt-1 text-[14px] text-mute">
                   {CATEGORY_META[category].blurb}
                 </p>
