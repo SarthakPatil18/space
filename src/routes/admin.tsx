@@ -17,6 +17,7 @@ import {
   formatDate,
   resolveResourceUrl,
 } from "@/lib/divhub";
+import { PdfViewerModal, type ActivePdf } from "@/components/divhub/pdf-viewer-modal";
 
 const getAdminClient = () => {
   const url = import.meta.env['VITE_SUPABASE_URL'];
@@ -46,6 +47,7 @@ function AdminPage() {
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [activePdf, setActivePdf] = useState<ActivePdf>(null);
 
   async function handleUpload(e: React.FormEvent) {
     e.preventDefault();
@@ -145,17 +147,11 @@ function AdminPage() {
     }
   }
 
-  async function handleOpenResource(resource: { file_path?: string | null; file_url?: string | null }) {
-    const newWindow = window.open("", "_blank");
+  async function handleOpenResource(resource: { title: string; file_path?: string | null; file_url?: string | null; file_size?: number | null }) {
     try {
       const url = await resolveResourceUrl(resource);
-      if (newWindow) {
-        newWindow.location.href = url;
-      } else {
-        window.open(url, "_blank", "noopener,noreferrer");
-      }
+      setActivePdf({ title: resource.title, url, file_size: resource.file_size });
     } catch (err) {
-      if (newWindow) newWindow.close();
       toast.error(err instanceof Error ? err.message : "Could not open file.");
     }
   }
@@ -356,6 +352,7 @@ function AdminPage() {
         </div>
       </main>
       <SiteFooter />
+      <PdfViewerModal pdf={activePdf} onClose={() => setActivePdf(null)} />
     </div>
   );
 }
