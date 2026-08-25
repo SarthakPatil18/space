@@ -79,11 +79,11 @@ export function PdfViewerModal({
   return (
     // Requirement 2 & 5: Dark semi-transparent backdrop covering viewport; click backdrop to close
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-2 sm:p-4 backdrop-blur-sm animate-in fade-in duration-200"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black animate-in fade-in duration-200"
       onClick={onClose}
     >
       <div
-        className="relative flex h-full w-full max-w-6xl flex-col rounded-xl bg-card border border-hairline shadow-2xl overflow-hidden sm:h-[92vh]"
+        className="relative flex h-screen w-screen flex-col bg-card overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Requirement 4: Modal header/toolbar with title, fallback link, download, and close button */}
