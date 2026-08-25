@@ -29,10 +29,15 @@ export function ResourceRow({
 
   async function withUrl(mode: "open" | "download") {
     setBusy(mode);
+    const newWindow = mode === "open" ? window.open("", "_blank") : null;
     try {
       const url = await resolveResourceUrl(resource);
       if (mode === "open") {
-        window.open(url, "_blank", "noopener,noreferrer");
+        if (newWindow) {
+          newWindow.location.href = url;
+        } else {
+          window.open(url, "_blank", "noopener,noreferrer");
+        }
       } else {
         const a = document.createElement("a");
         a.href = url;
@@ -42,6 +47,7 @@ export function ResourceRow({
         a.click();
       }
     } catch (error) {
+      if (newWindow) newWindow.close();
       toast.error(
         error instanceof Error ? error.message : "Could not open this file.",
       );

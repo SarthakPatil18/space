@@ -146,10 +146,16 @@ function AdminPage() {
   }
 
   async function handleOpenResource(resource: { file_path?: string | null; file_url?: string | null }) {
+    const newWindow = window.open("", "_blank");
     try {
       const url = await resolveResourceUrl(resource);
-      window.open(url, "_blank", "noopener,noreferrer");
+      if (newWindow) {
+        newWindow.location.href = url;
+      } else {
+        window.open(url, "_blank", "noopener,noreferrer");
+      }
     } catch (err) {
+      if (newWindow) newWindow.close();
       toast.error(err instanceof Error ? err.message : "Could not open file.");
     }
   }
