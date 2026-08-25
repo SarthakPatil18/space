@@ -222,14 +222,7 @@ export async function resolveResourceUrl(
       return `${baseUrl}${signedUrl.startsWith("/") ? "" : "/"}${signedUrl}`;
     }
 
-    // Direct public URL fallback for public storage objects
-    const { data: publicData } = supabase.storage
-      .from("resources")
-      .getPublicUrl(resource.file_path);
-
-    if (publicData?.publicUrl) {
-      return publicData.publicUrl;
-    }
+    throw new DivhubError("Could not generate a link for this file. Please try again.");
   }
 
   if (resource.file_url && typeof resource.file_url === "string")

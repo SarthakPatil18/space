@@ -37,12 +37,18 @@ export function ResourceRow({
     try {
       setBusy("download");
       const url = await resolveResourceUrl(resource);
+      const response = await fetch(url);
+      if (!response.ok) throw new Error("Failed to fetch file");
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
       const a = document.createElement("a");
-      a.href = url;
-      a.download = resource.title;
-      a.rel = "noopener";
-      a.target = "_blank";
+      a.href = blobUrl;
+      const ext = resource.file_path?.split(".").pop() || "pdf";
+      a.download = resource.title.toLowerCase().endsWith(`.${ext}`)
+        ? resource.title
+        : `${resource.title}.${ext}`;
       a.click();
+      URL.revokeObjectURL(blobUrl);
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Could not download this file.",

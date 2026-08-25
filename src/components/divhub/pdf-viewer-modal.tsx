@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Download, ExternalLink, Loader2, X, AlertCircle, FileText, Image as ImageIcon, Presentation } from "lucide-react";
+import { toast } from "sonner";
 import { resolveResourceUrl, type Resource } from "@/lib/divhub";
 
 export type ModalResource = {
@@ -27,6 +28,32 @@ export function PdfViewerModal({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [url, setUrl] = useState<string | null>(null);
+  const [downloading, setDownloading] = useState(false);
+
+  async function handleDownload() {
+    if (!url || !resource) return;
+    try {
+      setDownloading(true);
+      const response = await fetch(url);
+      if (!response.ok) throw new Error("Failed to fetch file");
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = blobUrl;
+      const ext = resource.file_path?.split(".").pop() || "pdf";
+      a.download = resource.title.toLowerCase().endsWith(`.${ext}`)
+        ? resource.title
+        : `${resource.title}.${ext}`;
+      a.click();
+      URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Could not download this file.",
+      );
+    } finally {
+      setDownloading(false);
+    }
+  }
 
   // Lock background scroll & handle Escape key
   useEffect(() => {
@@ -122,16 +149,21 @@ export function PdfViewerModal({
                   <ExternalLink className="size-4" />
                   <span className="hidden sm:inline">Open in new tab</span>
                 </a>
-                <a
-                  href={url}
-                  download={resource.title}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <button
+                  type="button"
+                  onClick={handleDownload}
+                  disabled={downloading}
                   className="btn-primary-sm gap-1.5 text-xs sm:text-sm"
                 >
-                  <Download className="size-4" />
-                  <span className="hidden sm:inline">Download</span>
-                </a>
+                  {downloading ? (
+                    <Loader2 className="size-4 animate-spin" />
+                  ) : (
+                    <Download className="size-4" />
+                  )}
+                  <span className="hidden sm:inline">
+                    {downloading ? "Downloading..." : "Download"}
+                  </span>
+                </button>
               </>
             ) : null}
             <button
