@@ -16,9 +16,14 @@ export function SiteHeader() {
           className="flex items-center gap-2 rounded-sm py-1"
         >
           <img
-            src="/logo.png"
+            src="/logo-light.png"
             alt="SPACE MITAOE"
-            className="h-10 sm:h-11 w-auto object-contain mix-blend-multiply dark:invert dark:mix-blend-screen transition-all"
+            className="h-10 sm:h-11 w-auto object-contain dark:hidden transition-all"
+          />
+          <img
+            src="/logo-dark.png"
+            alt="SPACE MITAOE"
+            className="h-10 sm:h-11 w-auto object-contain hidden dark:block transition-all"
           />
         </Link>
 
@@ -51,9 +56,14 @@ export function SiteFooter() {
       <div className="container-page flex flex-col gap-2 py-10 text-[13px] text-mute">
         <Link to="/" className="w-fit">
           <img
-            src="/logo.png"
+            src="/logo-light.png"
             alt="SPACE MITAOE"
-            className="h-8 w-auto object-contain mix-blend-multiply dark:invert dark:mix-blend-screen transition-all"
+            className="h-8 w-auto object-contain dark:hidden transition-all"
+          />
+          <img
+            src="/logo-dark.png"
+            alt="SPACE MITAOE"
+            className="h-8 w-auto object-contain hidden dark:block transition-all"
           />
         </Link>
         <p>Every note. Every PYQ. Every file. One place.</p>
