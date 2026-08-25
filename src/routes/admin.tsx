@@ -49,6 +49,11 @@ function AdminPage() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [activeAdminResource, setActiveAdminResource] = useState<ModalResource>(null);
 
+  // Bulk Upload State
+  const [uploadMode, setUploadMode] = useState<"bulk" | "single">("bulk");
+  const [bulkFiles, setBulkFiles] = useState<File[]>([]);
+  const [bulkProgress, setBulkProgress] = useState<{ current: number; total: number; currentFileName: string } | null>(null);
+
   async function handleUpload(e: React.FormEvent) {
     e.preventDefault();
     if (!selectedSubjectId) {
@@ -118,6 +123,79 @@ function AdminPage() {
     }
   }
 
+  async function handleBulkUpload(e: React.FormEvent) {
+    e.preventDefault();
+    if (!selectedSubjectId) {
+      toast.error("Please select a subject.");
+      return;
+    }
+    if (bulkFiles.length === 0) {
+      toast.error("Please select at least one PDF file.");
+      return;
+    }
+
+    setUploading(true);
+    const total = bulkFiles.length;
+    let successCount = 0;
+    let failCount = 0;
+
+    const client = getAdminClient();
+    const subject = subjects.data?.find((s) => s.id === selectedSubjectId);
+    const subjectCode = subject?.code.toLowerCase() ?? "general";
+
+    for (let i = 0; i < bulkFiles.length; i++) {
+      const f = bulkFiles[i];
+      if (!f) continue;
+      setBulkProgress({ current: i + 1, total, currentFileName: f.name });
+
+      const rawTitle = f.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " ").trim();
+      const derivedTitle = rawTitle ? rawTitle.charAt(0).toUpperCase() + rawTitle.slice(1) : f.name;
+      const sanitizedName = f.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+      const filePath = `${subjectCode}/${Date.now()}_${i}_${sanitizedName}`;
+
+      try {
+        const { error: storageError } = await client.storage
+          .from("resources")
+          .upload(filePath, f, {
+            cacheControl: "3600",
+            upsert: true,
+            contentType: f.type || "application/pdf",
+          });
+
+        if (storageError) throw storageError;
+
+        const { error: dbError } = await client.from("resources").insert({
+          subject_id: selectedSubjectId,
+          title: derivedTitle,
+          category: selectedCategory,
+          file_path: filePath,
+          file_type: "pdf",
+          file_size: f.size,
+        });
+
+        if (dbError) throw dbError;
+
+        successCount++;
+      } catch (err) {
+        console.error(`Failed to upload ${f.name}:`, err);
+        failCount++;
+      }
+    }
+
+    setUploading(false);
+    setBulkProgress(null);
+    setBulkFiles([]);
+
+    if (successCount > 0) {
+      toast.success(`Successfully uploaded ${successCount} resource${successCount > 1 ? "s" : ""}!`);
+      await queryClient.invalidateQueries({ queryKey: ["resources"] });
+    }
+
+    if (failCount > 0) {
+      toast.error(`Failed to upload ${failCount} file${failCount > 1 ? "s" : ""}.`);
+    }
+  }
+
   async function handleDelete(resourceId: string, filePath: string | null) {
     if (!confirm("Are you sure you want to delete this resource?")) return;
 
@@ -164,15 +242,41 @@ function AdminPage() {
         <div className="mt-8 grid gap-8 lg:grid-cols-12">
           {/* Upload Form */}
           <div className="lg:col-span-5">
-            <form
-              onSubmit={handleUpload}
-              className="hairline-card p-6 space-y-5 bg-card"
-            >
-              <h2 className="heading-md flex items-center gap-2">
-                <Upload className="size-5 text-primary" />
-                Upload New PDF
-              </h2>
+            <div className="hairline-card p-6 space-y-5 bg-card">
+              <div className="flex items-center justify-between">
+                <h2 className="heading-md flex items-center gap-2">
+                  <Upload className="size-5 text-primary" />
+                  Upload Resources
+                </h2>
+              </div>
 
+              {/* Mode Selector Tabs */}
+              <div className="flex rounded-lg border border-hairline p-1 bg-hairline-soft/50">
+                <button
+                  type="button"
+                  onClick={() => setUploadMode("bulk")}
+                  className={`flex-1 py-1.5 text-xs font-semibold rounded-md transition-colors ${
+                    uploadMode === "bulk"
+                      ? "bg-card text-ink shadow-sm"
+                      : "text-mute hover:text-ink"
+                  }`}
+                >
+                  Bulk Upload (Multiple PDFs)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setUploadMode("single")}
+                  className={`flex-1 py-1.5 text-xs font-semibold rounded-md transition-colors ${
+                    uploadMode === "single"
+                      ? "bg-card text-ink shadow-sm"
+                      : "text-mute hover:text-ink"
+                  }`}
+                >
+                  Single File
+                </button>
+              </div>
+
+              {/* Shared Subject & Category Fields */}
               <div>
                 <label className="block text-sm font-medium text-ink mb-1.5">
                   Subject *
@@ -198,7 +302,7 @@ function AdminPage() {
 
               <div>
                 <label className="block text-sm font-medium text-ink mb-1.5">
-                  Category *
+                  Category / Type *
                 </label>
                 <select
                   value={selectedCategory}
@@ -214,64 +318,146 @@ function AdminPage() {
                 </select>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-ink mb-1.5">
-                  Resource Title *
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. Unit 1 — Asymptotic Notation Notes"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  required
-                  className="w-full rounded-md border border-hairline bg-background px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-primary"
-                />
-              </div>
+              {/* Bulk Mode Form */}
+              {uploadMode === "bulk" ? (
+                <form onSubmit={handleBulkUpload} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-ink mb-1.5">
+                      Select PDF Files * (Multi-selection allowed)
+                    </label>
+                    <input
+                      type="file"
+                      multiple
+                      accept="application/pdf,.pdf"
+                      onChange={(e) =>
+                        setBulkFiles(Array.from(e.target.files ?? []))
+                      }
+                      disabled={uploading}
+                      className="w-full text-sm text-mute file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 cursor-pointer"
+                    />
+                  </div>
 
-              <div>
-                <label className="block text-sm font-medium text-ink mb-1.5">
-                  Description (Optional)
-                </label>
-                <textarea
-                  rows={2}
-                  placeholder="Short description for students..."
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  className="w-full rounded-md border border-hairline bg-background px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-primary"
-                />
-              </div>
+                  {/* Selected Files Preview List */}
+                  {bulkFiles.length > 0 ? (
+                    <div className="rounded-lg border border-hairline p-3 bg-background space-y-2">
+                      <div className="flex items-center justify-between text-xs font-semibold text-ink">
+                        <span>Selected {bulkFiles.length} file{bulkFiles.length > 1 ? "s" : ""}</span>
+                        <button
+                          type="button"
+                          onClick={() => setBulkFiles([])}
+                          className="text-mute hover:text-destructive transition-colors"
+                        >
+                          Clear all
+                        </button>
+                      </div>
+                      <div className="max-h-36 overflow-y-auto space-y-1 pr-1">
+                        {bulkFiles.map((f, index) => (
+                          <div
+                            key={index}
+                            className="flex items-center justify-between text-xs text-mute py-1 border-b border-hairline/50 last:border-0"
+                          >
+                            <span className="truncate max-w-[220px] font-medium text-ink">
+                              {f.name}
+                            </span>
+                            <span>{formatFileSize(f.size)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
 
-              <div>
-                <label className="block text-sm font-medium text-ink mb-1.5">
-                  PDF File * (Max 20MB)
-                </label>
-                <input
-                  type="file"
-                  accept="application/pdf,.pdf"
-                  onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-                  required
-                  className="w-full text-sm text-mute file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 cursor-pointer"
-                />
-              </div>
+                  {/* Progress Banner */}
+                  {bulkProgress ? (
+                    <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 text-xs text-ink space-y-1">
+                      <div className="flex items-center justify-between font-semibold">
+                        <span>Uploading file {bulkProgress.current} of {bulkProgress.total}...</span>
+                        <span>{Math.round((bulkProgress.current / bulkProgress.total) * 100)}%</span>
+                      </div>
+                      <p className="truncate text-mute">{bulkProgress.currentFileName}</p>
+                    </div>
+                  ) : null}
 
-              <button
-                type="submit"
-                disabled={uploading}
-                className="btn-primary-sm w-full justify-center py-2.5 text-sm"
-              >
-                {uploading ? (
-                  <>
-                    <Loader2 className="size-4 animate-spin" />
-                    Uploading...
-                  </>
-                ) : (
-                  <>
-                    <Upload className="size-4" />
-                    Upload Resource
-                  </>
-                )}
-              </button>
-            </form>
+                  <button
+                    type="submit"
+                    disabled={uploading || bulkFiles.length === 0}
+                    className="btn-primary-sm w-full justify-center py-2.5 text-sm"
+                  >
+                    {uploading ? (
+                      <>
+                        <Loader2 className="size-4 animate-spin" />
+                        Uploading {bulkProgress ? `${bulkProgress.current}/${bulkProgress.total}` : "..."}
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="size-4" />
+                        Upload {bulkFiles.length > 0 ? `${bulkFiles.length} PDF${bulkFiles.length > 1 ? "s" : ""}` : "PDFs"} in Bulk
+                      </>
+                    )}
+                  </button>
+                </form>
+              ) : (
+                /* Single File Mode Form */
+                <form onSubmit={handleUpload} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-ink mb-1.5">
+                      Resource Title *
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Unit 1 — Asymptotic Notation Notes"
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                      required
+                      className="w-full rounded-md border border-hairline bg-background px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-ink mb-1.5">
+                      Description (Optional)
+                    </label>
+                    <textarea
+                      rows={2}
+                      placeholder="Short description for students..."
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                      className="w-full rounded-md border border-hairline bg-background px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-ink mb-1.5">
+                      PDF File * (Max 20MB)
+                    </label>
+                    <input
+                      type="file"
+                      accept="application/pdf,.pdf"
+                      onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+                      required
+                      className="w-full text-sm text-mute file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 cursor-pointer"
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={uploading}
+                    className="btn-primary-sm w-full justify-center py-2.5 text-sm"
+                  >
+                    {uploading ? (
+                      <>
+                        <Loader2 className="size-4 animate-spin" />
+                        Uploading...
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="size-4" />
+                        Upload Resource
+                      </>
+                    )}
+                  </button>
+                </form>
+              )}
+            </div>
           </div>
 
           {/* Manage Existing Resources */}
