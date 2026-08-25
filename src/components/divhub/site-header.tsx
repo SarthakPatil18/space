@@ -46,7 +46,7 @@ export function SiteFooter() {
     <footer className="mt-24 border-t border-hairline">
       <div className="container-page flex flex-col gap-1 py-10 text-[13px] text-mute">
         <p className="font-medium text-ink">SPACE</p>
-        <p>Notes, files, PYQs and syllabus for your division — nothing else.</p>
+        <p>Every note. Every PYQ. Every file. One place.</p>
       </div>
     </footer>
   );

@@ -13,17 +13,17 @@ import { recentResourcesQuery, subjectsQuery } from "@/lib/divhub";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "SPACE — Notes, Files, PYQs & Syllabus for your division" },
+      { title: "SPACE — Every note. Every PYQ. Every file. One place." },
       {
         name: "description",
         content:
-          "The fastest way for students to find subject notes, files, previous year questions and syllabus. No login, no clutter.",
+          "Find what you need for your semester - fast, simple, and without the clutter.",
       },
-      { property: "og:title", content: "SPACE — Your division's resource hub" },
+      { property: "og:title", content: "SPACE — Your semester's resource hub" },
       {
         property: "og:description",
         content:
-          "Open, search and download subject notes, files, PYQs and syllabus in seconds.",
+          "Find what you need for your semester - fast, simple, and without the clutter.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -42,13 +42,12 @@ function Home() {
 
       <section className="mesh-gradient border-b border-hairline">
         <div className="container-page py-16 md:py-24">
-          <p className="eyebrow">Division B · Computer Engineering</p>
+          <p className="eyebrow">AI/ML · Computer Engineering</p>
           <h1 className="display-xl mt-3 max-w-2xl">
-            Notes, files, PYQs and syllabus. Nothing else.
+            Every note. Every PYQ. Every file. One place.
           </h1>
           <p className="mt-4 max-w-xl text-[16px] leading-6 text-body">
-            Everything your division needs, one click away — no logins, no
-            loading screens, no menus to dig through.
+            Find what you need for your semester - fast, simple, and without the clutter.
           </p>
           <div className="mt-7 max-w-xl">
             <SearchBox large />
