@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Download, ExternalLink, X } from "lucide-react";
+import { Download, ExternalLink } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import {
@@ -10,6 +10,7 @@ import {
   type Resource,
 } from "@/lib/divhub";
 import { FileIcon } from "./ui-bits";
+import { PdfViewerModal, type ModalResource } from "./pdf-viewer-modal";
 
 export type ResourceWithSubject = Resource & {
   subjects?: { id: string; name: string; code: string } | null;
@@ -24,26 +25,10 @@ export function ResourceRow({
   showSubject?: boolean;
   showCategory?: boolean;
 }) {
-  const [busy, setBusy] = useState<"open" | "download" | null>(null);
-  const [viewerUrl, setViewerUrl] = useState<string | null>(null);
-  const [viewerError, setViewerError] = useState<string | null>(null);
+  const [busy, setBusy] = useState<"download" | null>(null);
+  const [activeModalResource, setActiveModalResource] =
+    useState<ModalResource>(null);
   const size = formatFileSize(resource.file_size);
-
-  async function handleOpen() {
-    // Always regenerate the signed URL (it expires in 1 hour)
-    setBusy("open");
-    setViewerError(null);
-    try {
-      const url = await resolveResourceUrl(resource);
-      setViewerUrl(url);
-    } catch (error) {
-      const msg = error instanceof Error ? error.message : "Could not load this file.";
-      setViewerError(msg);
-      toast.error(msg);
-    } finally {
-      setBusy(null);
-    }
-  }
 
   async function handleDownload() {
     setBusy("download");
@@ -62,11 +47,6 @@ export function ResourceRow({
     } finally {
       setBusy(null);
     }
-  }
-
-  function handleClose() {
-    setViewerUrl(null);
-    setViewerError(null);
   }
 
   return (
@@ -110,12 +90,11 @@ export function ResourceRow({
         <div className="flex shrink-0 items-center gap-2">
           <button
             type="button"
-            onClick={() => void handleOpen()}
-            disabled={busy !== null}
+            onClick={() => setActiveModalResource(resource)}
             className="btn-primary-sm"
           >
             <ExternalLink className="size-3.5" aria-hidden="true" />
-            {busy === "open" ? "Loading…" : "Open"}
+            Open
           </button>
           <button
             type="button"
@@ -130,47 +109,11 @@ export function ResourceRow({
         </div>
       </article>
 
-      {/* Inline PDF Viewer */}
-      {viewerUrl ? (
-        <div className="mt-2 mb-4 rounded-lg border border-hairline overflow-hidden bg-background">
-          <div className="flex items-center justify-between px-4 py-2 border-b border-hairline bg-card">
-            <span className="text-sm font-medium text-ink truncate pr-4">
-              {resource.title}
-            </span>
-            <div className="flex items-center gap-3 shrink-0">
-              <a
-                href={viewerUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
-              >
-                <ExternalLink className="size-3.5" />
-                Open in new tab
-              </a>
-              <button
-                type="button"
-                onClick={handleClose}
-                className="rounded p-1 text-mute hover:text-ink hover:bg-hairline-soft transition-colors"
-                aria-label="Close viewer"
-              >
-                <X className="size-4" />
-              </button>
-            </div>
-          </div>
-          <iframe
-            src={viewerUrl}
-            title={resource.title}
-            style={{ width: "100%", height: "90vh", border: "none" }}
-          />
-        </div>
-      ) : null}
-
-      {/* Error state */}
-      {viewerError ? (
-        <div className="mt-2 mb-4 rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
-          {viewerError}
-        </div>
-      ) : null}
+      {/* Google Drive-Style Modal PDF Overlay */}
+      <PdfViewerModal
+        resource={activeModalResource}
+        onClose={() => setActiveModalResource(null)}
+      />
     </>
   );
 }

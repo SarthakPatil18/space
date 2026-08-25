@@ -17,6 +17,7 @@ import {
   formatDate,
   resolveResourceUrl,
 } from "@/lib/divhub";
+import { PdfViewerModal, type ModalResource } from "@/components/divhub/pdf-viewer-modal";
 
 const getAdminClient = () => {
   const url = import.meta.env['VITE_SUPABASE_URL'];
@@ -46,8 +47,7 @@ function AdminPage() {
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [adminViewerUrl, setAdminViewerUrl] = useState<string | null>(null);
-  const [adminViewerTitle, setAdminViewerTitle] = useState<string>("");
+  const [activeAdminResource, setActiveAdminResource] = useState<ModalResource>(null);
 
   async function handleUpload(e: React.FormEvent) {
     e.preventDefault();
@@ -144,16 +144,6 @@ function AdminPage() {
       toast.error("Failed to delete resource.");
     } finally {
       setDeletingId(null);
-    }
-  }
-
-  async function handleOpenResource(resource: { title: string; file_path?: string | null; file_url?: string | null }) {
-    try {
-      const url = await resolveResourceUrl(resource);
-      setAdminViewerUrl(url);
-      setAdminViewerTitle(resource.title);
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not open file.");
     }
   }
 
@@ -323,9 +313,9 @@ function AdminPage() {
                       <div className="flex items-center gap-2 shrink-0">
                         <button
                           type="button"
-                          onClick={() => void handleOpenResource(r)}
+                          onClick={() => setActiveAdminResource(r)}
                           className="btn-primary-sm py-1 px-2.5 text-xs"
-                          title="Open PDF in new tab"
+                          title="Preview PDF"
                         >
                           <ExternalLink className="size-3.5" />
                           Open
@@ -351,43 +341,12 @@ function AdminPage() {
             </div>
           </div>
         </div>
-
-        {/* Inline PDF Viewer */}
-        {adminViewerUrl ? (
-          <div className="mt-8 rounded-lg border border-hairline overflow-hidden bg-background">
-            <div className="flex items-center justify-between px-4 py-2 border-b border-hairline bg-card">
-              <span className="text-sm font-medium text-ink truncate pr-4">
-                {adminViewerTitle}
-              </span>
-              <div className="flex items-center gap-3 shrink-0">
-                <a
-                  href={adminViewerUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
-                >
-                  <ExternalLink className="size-3.5" />
-                  Open in new tab
-                </a>
-                <button
-                  type="button"
-                  onClick={() => { setAdminViewerUrl(null); setAdminViewerTitle(""); }}
-                  className="rounded p-1 text-mute hover:text-ink hover:bg-hairline-soft transition-colors"
-                  aria-label="Close viewer"
-                >
-                  <X className="size-4" />
-                </button>
-              </div>
-            </div>
-            <iframe
-              src={adminViewerUrl}
-              title={adminViewerTitle}
-              style={{ width: "100%", height: "90vh", border: "none" }}
-            />
-          </div>
-        ) : null}
       </main>
       <SiteFooter />
+      <PdfViewerModal
+        resource={activeAdminResource}
+        onClose={() => setActiveAdminResource(null)}
+      />
     </div>
   );
 }
