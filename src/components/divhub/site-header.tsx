@@ -18,7 +18,7 @@ export function SiteHeader() {
           <img
             src="/logo.png"
             alt="SPACE MITAOE"
-            className="h-10 sm:h-11 w-auto object-contain dark:invert transition-all"
+            className="h-10 sm:h-11 w-auto object-contain mix-blend-multiply dark:invert dark:mix-blend-screen transition-all"
           />
         </Link>
 
@@ -53,7 +53,7 @@ export function SiteFooter() {
           <img
             src="/logo.png"
             alt="SPACE MITAOE"
-            className="h-8 w-auto object-contain dark:invert transition-all"
+            className="h-8 w-auto object-contain mix-blend-multiply dark:invert dark:mix-blend-screen transition-all"
           />
         </Link>
         <p>Every note. Every PYQ. Every file. One place.</p>
