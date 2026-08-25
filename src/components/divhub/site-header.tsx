@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { ThemeToggle } from "./theme-toggle";
 
 const navLinks = [
   { to: "/", label: "Home" },
@@ -17,7 +18,7 @@ export function SiteHeader() {
           SPACE
         </Link>
 
-        <nav aria-label="Main" className="flex items-center gap-1">
+        <nav aria-label="Main" className="flex items-center gap-1 sm:gap-2">
           {navLinks.map((link) => (
             <Link
               key={link.to}
@@ -31,6 +32,9 @@ export function SiteHeader() {
           <Link to="/admin" className="btn-ghost-sm ml-1">
             Admin
           </Link>
+          <div className="ml-1 border-l border-hairline pl-2">
+            <ThemeToggle />
+          </div>
         </nav>
       </div>
     </header>
