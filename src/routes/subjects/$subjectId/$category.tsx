@@ -13,6 +13,7 @@ import {
 import {
   CATEGORIES,
   CATEGORY_META,
+  getSubjectColor,
   isCategory,
   subjectQuery,
   subjectResourcesQuery,
@@ -47,6 +48,7 @@ function CategoryPage() {
 
   const valid = isCategory(category);
   const allResources = resources.data ?? [];
+  const subjectColor = getSubjectColor(subject.data);
   const categoryResources = valid
     ? allResources.filter((r) => r.category === category)
     : [];
@@ -96,7 +98,15 @@ function CategoryPage() {
           <>
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
               <div>
-                <h1 className="heading-lg">{subject.data?.name ?? "Subject"}</h1>
+                {subject.data?.code ? (
+                  <span
+                    className="inline-block rounded px-2 py-0.5 text-xs font-semibold"
+                    style={{ backgroundColor: `${subjectColor}15`, color: subjectColor }}
+                  >
+                    {subject.data.code}
+                  </span>
+                ) : null}
+                <h1 className="heading-lg mt-1">{subject.data?.name ?? "Subject"}</h1>
                 <p className="mt-1 text-[14px] text-mute">
                   {CATEGORY_META[category].blurb}
                 </p>

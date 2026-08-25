@@ -6,6 +6,7 @@ import {
   CATEGORY_META,
   formatDate,
   formatFileSize,
+  getSubjectColor,
   resolveResourceUrl,
   type Resource,
 } from "@/lib/divhub";
@@ -13,7 +14,7 @@ import { FileIcon } from "./ui-bits";
 import { PdfViewerModal, type ModalResource } from "./pdf-viewer-modal";
 
 export type ResourceWithSubject = Resource & {
-  subjects?: { id: string; name: string; code: string } | null;
+  subjects?: { id: string; name: string; code: string; color?: string | null } | null;
 };
 
 export function ResourceRow({
@@ -28,11 +29,13 @@ export function ResourceRow({
   const [busy, setBusy] = useState<"download" | null>(null);
   const [activeModalResource, setActiveModalResource] =
     useState<ModalResource>(null);
+
   const size = formatFileSize(resource.file_size);
+  const subjectColor = getSubjectColor(resource.subjects);
 
   async function handleDownload() {
-    setBusy("download");
     try {
+      setBusy("download");
       const url = await resolveResourceUrl(resource);
       const a = document.createElement("a");
       a.href = url;
@@ -52,7 +55,7 @@ export function ResourceRow({
   return (
     <>
       <article className="hairline-card flex flex-col gap-3 p-4 transition-shadow hover:shadow-whisper sm:flex-row sm:items-center sm:gap-4">
-        <FileIcon type={resource.file_type} />
+        <FileIcon type={resource.file_type} color={subjectColor} />
 
         <div className="min-w-0 flex-1">
           <h3 className="truncate text-[15px] font-medium text-ink">
@@ -64,7 +67,8 @@ export function ResourceRow({
                 <Link
                   to="/subjects/$subjectId/$category"
                   params={{ subjectId: resource.subjects.id, category: "notes" }}
-                  className="rounded-sm text-body hover:text-ink"
+                  className="rounded px-1.5 py-0.5 text-xs font-semibold hover:opacity-80 transition-opacity"
+                  style={{ backgroundColor: `${subjectColor}15`, color: subjectColor }}
                 >
                   {resource.subjects.name}
                 </Link>

@@ -70,19 +70,24 @@ export function SkeletonRows({ count = 4 }: { count?: number }) {
   );
 }
 
-export function FileIcon({ type }: { type: string | null }) {
+export function FileIcon({
+  color = "#64748B",
+}: {
+  type?: string | null;
+  color?: string | null;
+}) {
+  const accentColor = color || "#64748B";
+
   return (
     <span
-      className="flex size-9 shrink-0 items-center justify-center rounded-sm border border-hairline bg-hairline-soft"
+      className="flex size-9 shrink-0 items-center justify-center rounded-lg border transition-colors"
+      style={{
+        backgroundColor: `${accentColor}15`,
+        borderColor: `${accentColor}40`,
+      }}
       aria-hidden="true"
     >
-      {type ? (
-        <span className="font-mono text-[10px] font-medium uppercase text-body">
-          {type.slice(0, 4)}
-        </span>
-      ) : (
-        <FileText className="size-4 text-body" />
-      )}
+      <FileText className="size-4 shrink-0" style={{ color: accentColor }} />
     </span>
   );
 }

@@ -74,6 +74,7 @@ export type Database = {
       sections: {
         Row: {
           code: string
+          color: string | null
           created_at: string
           id: string
           name: string
@@ -82,6 +83,7 @@ export type Database = {
         }
         Insert: {
           code: string
+          color?: string | null
           created_at?: string
           id?: string
           name: string
@@ -90,6 +92,7 @@ export type Database = {
         }
         Update: {
           code?: string
+          color?: string | null
           created_at?: string
           id?: string
           name?: string
@@ -109,6 +112,7 @@ export type Database = {
       subjects: {
         Row: {
           code: string
+          color: string | null
           created_at: string
           id: string
           name: string
@@ -116,6 +120,7 @@ export type Database = {
         }
         Insert: {
           code: string
+          color?: string | null
           created_at?: string
           id?: string
           name: string
@@ -123,6 +128,7 @@ export type Database = {
         }
         Update: {
           code?: string
+          color?: string | null
           created_at?: string
           id?: string
           name?: string

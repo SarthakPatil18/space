@@ -18,6 +18,34 @@ export const CATEGORY_META: Record<
   files: { label: "Files", blurb: "Other subject material" },
 };
 
+export const DEFAULT_SUBJECT_COLORS: Record<string, string> = {
+  OS: "#3B82F6",
+  DSA: "#10B981",
+  CPP: "#8B5CF6",
+  AM: "#F59E0B",
+  AI: "#EC4899",
+  PROTOTYPING: "#06B6D4",
+  UHV: "#64748B",
+};
+
+export const DEFAULT_SECTION_COLORS: Record<string, string> = {
+  CHEM: "#22D3EE",
+  SOFTWARE: "#0891B2",
+  MECH: "#0284C7",
+  CIVIL: "#0369A1",
+};
+
+export function getSubjectColor(
+  subject?: { code?: string; color?: string | null } | null,
+): string {
+  if (subject?.color) return subject.color;
+  if (subject?.code) {
+    const defaultColor = DEFAULT_SUBJECT_COLORS[subject.code.toUpperCase()];
+    if (defaultColor) return defaultColor;
+  }
+  return "#64748B"; // Neutral default fallback
+}
+
 export function isCategory(value: string): value is Category {
   return (CATEGORIES as string[]).includes(value);
 }
