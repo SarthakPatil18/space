@@ -48,6 +48,8 @@ function AdminPage() {
   const [uploading, setUploading] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [activeAdminResource, setActiveAdminResource] = useState<ModalResource>(null);
+  const [examType, setExamType] = useState<"mse" | "ese" | "">("");
+  const [year, setYear] = useState<string>(new Date().getFullYear().toString());
 
   // Bulk Upload State
   const [uploadMode, setUploadMode] = useState<"bulk" | "single">("bulk");
@@ -107,6 +109,8 @@ function getFileExtType(filename: string): string {
         file_type: getFileExtType(file.name),
         file_size: file.size,
         description: description.trim() || null,
+        exam_type: selectedCategory === "pyqs" && examType ? examType : null,
+        year: selectedCategory === "pyqs" && year ? parseInt(year) : null,
       });
 
       if (dbError) {
@@ -117,6 +121,7 @@ function getFileExtType(filename: string): string {
       setTitle("");
       setDescription("");
       setFile(null);
+      setExamType("");
       
       // Invalidate queries so UI refreshes everywhere
       await queryClient.invalidateQueries({ queryKey: ["resources"] });
@@ -171,6 +176,24 @@ function getFileExtType(filename: string): string {
 
         if (storageError) throw storageError;
 
+        let derivedExamType: "mse" | "ese" | null = null;
+        let derivedYear: number | null = null;
+
+        if (selectedCategory === "pyqs") {
+          const lowerName = f.name.toLowerCase();
+          if (lowerName.includes("mse") || lowerName.includes("mid")) {
+            derivedExamType = "mse";
+          } else if (lowerName.includes("ese") || lowerName.includes("end")) {
+            derivedExamType = "ese";
+          }
+
+          // Match 4-digit numbers between 2000 and 2030 (year)
+          const yearMatch = f.name.match(/\b(20[0-2][0-9]|2030)\b/);
+          if (yearMatch) {
+            derivedYear = parseInt(yearMatch[0]);
+          }
+        }
+
         const { error: dbError } = await client.from("resources").insert({
           subject_id: selectedSubjectId,
           title: derivedTitle,
@@ -178,6 +201,8 @@ function getFileExtType(filename: string): string {
           file_path: filePath,
           file_type: getFileExtType(f.name),
           file_size: f.size,
+          exam_type: derivedExamType,
+          year: derivedYear,
         });
 
         if (dbError) throw dbError;
@@ -431,6 +456,40 @@ function getFileExtType(filename: string): string {
                       className="w-full rounded-md border border-hairline bg-background px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-primary"
                     />
                   </div>
+
+                  {selectedCategory === "pyqs" && (
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-sm font-medium text-ink mb-1.5">
+                          Exam Type *
+                        </label>
+                        <select
+                          value={examType}
+                          onChange={(e) => setExamType(e.target.value as "mse" | "ese" | "")}
+                          required
+                          className="w-full rounded-md border border-hairline bg-background px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-primary"
+                        >
+                          <option value="">Select exam type...</option>
+                          <option value="mse">Mid Semester Exam (MSE)</option>
+                          <option value="ese">End Semester Exam (ESE)</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-ink mb-1.5">
+                          Exam Year *
+                        </label>
+                        <input
+                          type="number"
+                          min="2000"
+                          max="2100"
+                          value={year}
+                          onChange={(e) => setYear(e.target.value)}
+                          required
+                          className="w-full rounded-md border border-hairline bg-background px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-primary"
+                        />
+                      </div>
+                    </div>
+                  )}
 
                   <div>
                     <label className="block text-sm font-medium text-ink mb-1.5">

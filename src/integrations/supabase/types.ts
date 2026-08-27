@@ -27,6 +27,8 @@ export type Database = {
           subject_id: string
           title: string
           updated_at: string
+          exam_type: string | null
+          year: number | null
         }
         Insert: {
           category: Database["public"]["Enums"]["resource_category"]
@@ -40,6 +42,8 @@ export type Database = {
           subject_id: string
           title: string
           updated_at?: string
+          exam_type?: string | null
+          year?: number | null
         }
         Update: {
           category?: Database["public"]["Enums"]["resource_category"]
@@ -53,6 +57,8 @@ export type Database = {
           subject_id?: string
           title?: string
           updated_at?: string
+          exam_type?: string | null
+          year?: number | null
         }
         Relationships: [
           {

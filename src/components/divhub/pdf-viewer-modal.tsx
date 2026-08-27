@@ -9,6 +9,8 @@ export type ModalResource = {
   file_path?: string | null;
   file_url?: string | null;
   file_size?: number | null;
+  exam_type?: string | null;
+  year?: number | null;
 } | null;
 
 function getFileType(fileOrPath: string): "image" | "ppt" | "pdf" {

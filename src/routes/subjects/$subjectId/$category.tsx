@@ -167,7 +167,7 @@ function CategoryPage() {
             </nav>
 
             {/* Resources List */}
-            <div className="mt-6 space-y-2">
+            <div className="mt-6 space-y-6">
               {resources.isPending ? (
                 <SkeletonRows count={4} />
               ) : resources.isError ? (
@@ -185,6 +185,96 @@ function CategoryPage() {
                       : "Check back later — this section will fill up as material is added."
                   }
                 />
+              ) : category === "pyqs" ? (
+                // Group PYQ resources by ESE/MSE/Other
+                (() => {
+                  const msePapers = list.filter((r) => r.exam_type === "mse");
+                  const esePapers = list.filter((r) => r.exam_type === "ese");
+                  const otherPapers = list.filter((r) => r.exam_type !== "mse" && r.exam_type !== "ese");
+
+                  return (
+                    <div className="space-y-8">
+                      {msePapers.length > 0 && (
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-2 border-b border-hairline pb-2">
+                            <span
+                              className="size-2.5 rounded-full"
+                              style={{ backgroundColor: subjectColor }}
+                            />
+                            <h2 className="text-base font-semibold text-ink">
+                              Mid Semester Examinations (MSE)
+                            </h2>
+                            <span className="text-xs text-mute font-medium">({msePapers.length})</span>
+                          </div>
+                          <div className="space-y-2">
+                            {msePapers.map((resource) => (
+                              <ResourceRow
+                                key={resource.id}
+                                resource={resource}
+                                showCategory={Boolean(query)}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {esePapers.length > 0 && (
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-2 border-b border-hairline pb-2">
+                            <span
+                              className="size-2.5 rounded-full"
+                              style={{ backgroundColor: subjectColor }}
+                            />
+                            <h2 className="text-base font-semibold text-ink">
+                              End Semester Examinations (ESE)
+                            </h2>
+                            <span className="text-xs text-mute font-medium">({esePapers.length})</span>
+                          </div>
+                          <div className="space-y-2">
+                            {esePapers.map((resource) => (
+                              <ResourceRow
+                                key={resource.id}
+                                resource={resource}
+                                showCategory={Boolean(query)}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {otherPapers.length > 0 && (
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-2 border-b border-hairline pb-2">
+                            <span
+                              className="size-2.5 rounded-full"
+                              style={{ backgroundColor: "var(--mute)" }}
+                            />
+                            <h2 className="text-base font-semibold text-ink">
+                              Other Question Papers
+                            </h2>
+                            <span className="text-xs text-mute font-medium">({otherPapers.length})</span>
+                          </div>
+                          <div className="space-y-2">
+                            {otherPapers.map((resource) => (
+                              <ResourceRow
+                                key={resource.id}
+                                resource={resource}
+                                showCategory={Boolean(query)}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {msePapers.length === 0 && esePapers.length === 0 && otherPapers.length === 0 && (
+                        <EmptyState
+                          title="No question papers matching filters"
+                          description="Try clearing your search query."
+                        />
+                      )}
+                    </div>
+                  );
+                })()
               ) : (
                 list.map((resource) => (
                   <ResourceRow

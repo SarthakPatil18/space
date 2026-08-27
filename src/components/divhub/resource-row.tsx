@@ -90,6 +90,14 @@ export function ResourceRow({
                 <span aria-hidden="true">·</span>
               </>
             ) : null}
+            {resource.year ? (
+              <>
+                <span className="font-semibold text-ink/75 bg-hairline px-1.5 py-0.5 rounded text-xs">
+                  {resource.year}
+                </span>
+                <span aria-hidden="true">·</span>
+              </>
+            ) : null}
             {size ? (
               <>
                 <span>{size}</span>
