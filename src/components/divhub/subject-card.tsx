@@ -15,8 +15,8 @@ export function SubjectCard({
     <Link
       to="/subjects/$subjectId/$category"
       params={{ subjectId: subject.id, category: "notes" }}
-      className="hairline-card group relative flex flex-col p-5 overflow-hidden transition-all hover:shadow-whisper border-l-4"
-      style={{ borderLeftColor: color }}
+      className="hairline-card group relative flex flex-col p-5 overflow-hidden transition-all hover:shadow-whisper border-l-4 hover:bg-[var(--hover-bg)]"
+      style={{ borderLeftColor: color, "--hover-bg": `${color}08` } as React.CSSProperties}
     >
       <div className="flex items-center justify-between">
         <span

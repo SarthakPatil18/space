@@ -144,11 +144,20 @@ function CategoryPage() {
                     key={c}
                     to="/subjects/$subjectId/$category"
                     params={{ subjectId, category: c }}
-                    className={`inline-flex items-center gap-1.5 rounded-full border px-4 py-1.5 text-sm font-medium transition-colors ${
+                    className="inline-flex items-center gap-1.5 rounded-full border px-4 py-1.5 text-sm font-medium transition-colors hover:opacity-90"
+                    style={
                       c === category
-                        ? "border-transparent bg-primary text-primary-foreground"
-                        : "border-hairline bg-card text-ink hover:bg-hairline-soft"
-                    }`}
+                        ? {
+                            backgroundColor: subjectColor,
+                            borderColor: "transparent",
+                            color: "#ffffff",
+                          }
+                        : {
+                            borderColor: "var(--border)",
+                            backgroundColor: "var(--card)",
+                            color: "var(--ink)",
+                          }
+                    }
                   >
                     <span>{CATEGORY_META[c].label}</span>
                     <span className="text-xs opacity-75">({count})</span>

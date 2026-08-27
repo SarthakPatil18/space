@@ -60,7 +60,10 @@ export function ResourceRow({
 
   return (
     <>
-      <article className="hairline-card flex flex-col gap-3 p-4 transition-shadow hover:shadow-whisper sm:flex-row sm:items-center sm:gap-4">
+      <article
+        className="hairline-card flex flex-col gap-3 p-4 transition-all hover:shadow-whisper sm:flex-row sm:items-center sm:gap-4 hover:bg-[var(--hover-bg)]"
+        style={{ "--hover-bg": `${subjectColor}05` } as React.CSSProperties}
+      >
         <FileIcon type={resource.file_type} color={subjectColor} />
 
         <div className="min-w-0 flex-1">
