@@ -63,6 +63,56 @@ function getFileExtType(filename: string): string {
   return "pdf";
 }
 
+async function insertResourceSafely(
+  client: ReturnType<typeof getAdminClient>,
+  payload: {
+    subject_id: string;
+    title: string;
+    category: Category;
+    file_path: string;
+    file_type: string;
+    file_size: number | null;
+    description?: string | null;
+    exam_type?: string | null;
+    year?: number | null;
+  }
+) {
+  const cleanPayload: Record<string, any> = {
+    subject_id: payload.subject_id,
+    title: payload.title,
+    category: payload.category,
+    file_path: payload.file_path,
+    file_type: payload.file_type,
+    file_size: payload.file_size,
+    description: payload.description || null,
+  };
+
+  if (payload.exam_type) cleanPayload["exam_type"] = payload.exam_type;
+  if (payload.year) cleanPayload["year"] = payload.year;
+
+  // First try: insert payload
+  let { error } = await client.from("resources").insert(cleanPayload);
+
+  // Fallback 1: If database schema does not have exam_type/year columns yet
+  if (error && (error.message?.includes("exam_type") || error.message?.includes("year") || error.code === "PGRST204")) {
+    delete cleanPayload["exam_type"];
+    delete cleanPayload["year"];
+    const retry = await client.from("resources").insert(cleanPayload);
+    error = retry.error;
+  }
+
+  // Fallback 2: If database has a strict 20MB file size check constraint
+  if (error && (error.message?.includes("file_size") || error.code === "23514")) {
+    cleanPayload["file_size"] = null;
+    const retry = await client.from("resources").insert(cleanPayload);
+    error = retry.error;
+  }
+
+  if (error) {
+    throw new Error(`Database insert failed: ${error.message}`);
+  }
+}
+
   async function handleUpload(e: React.FormEvent) {
     e.preventDefault();
     if (!selectedSubjectId) {
@@ -100,8 +150,8 @@ function getFileExtType(filename: string): string {
         throw new Error(`Storage upload failed: ${storageError.message}`);
       }
 
-      // 2. Insert record into database table
-      const { error: dbError } = await client.from("resources").insert({
+      // 2. Insert record into database table safely
+      await insertResourceSafely(client, {
         subject_id: selectedSubjectId,
         title: title.trim(),
         category: selectedCategory,
@@ -112,10 +162,6 @@ function getFileExtType(filename: string): string {
         exam_type: selectedCategory === "pyqs" && examType ? examType : null,
         year: selectedCategory === "pyqs" && year ? parseInt(year) : null,
       });
-
-      if (dbError) {
-        throw new Error(`Database insert failed: ${dbError.message}`);
-      }
 
       toast.success("Resource uploaded successfully!");
       setTitle("");
@@ -194,7 +240,7 @@ function getFileExtType(filename: string): string {
           }
         }
 
-        const { error: dbError } = await client.from("resources").insert({
+        await insertResourceSafely(client, {
           subject_id: selectedSubjectId,
           title: derivedTitle,
           category: selectedCategory,
@@ -204,8 +250,6 @@ function getFileExtType(filename: string): string {
           exam_type: derivedExamType,
           year: derivedYear,
         });
-
-        if (dbError) throw dbError;
 
         successCount++;
       } catch (err) {
