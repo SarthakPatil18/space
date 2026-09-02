@@ -81,7 +81,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:title", content: "SPACE — MITAOE Academic Resource Hub" },
       { property: "og:description", content: "Academic resources, notes, files, PYQs, and syllabus for MITAOE students." },
       { property: "og:type", content: "website" },
+      { property: "og:image", content: "/logo.png" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:image", content: "/logo.png" },
     ],
     links: [
       {
