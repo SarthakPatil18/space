@@ -232,7 +232,7 @@ function CategoryPage() {
               </div>
 
               {/* Toolbar: Search + Filter Dropdown + View Mode Switcher */}
-              <div className="flex flex-wrap items-center gap-2 sm:gap-3 shrink-0">
+              <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto shrink-0">
                 {/* Search in Subject Input */}
                 <div className="relative flex-1 sm:w-64">
                   <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-mute" />
@@ -255,22 +255,23 @@ function CategoryPage() {
                   ) : null}
                 </div>
 
-                {/* Filter Option (Beside Grid & Linear View) */}
-                <FilterDropdown
-                  selectedExam={selectedExamTypeTab}
-                  onExamChange={setSelectedExamTypeTab}
-                  selectedYear={selectedYear}
-                  onYearChange={setSelectedYear}
-                  availableYears={availableYears}
-                  color={subjectColor}
-                />
+                {/* Filter & View Mode Actions */}
+                <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                  <FilterDropdown
+                    selectedExam={selectedExamTypeTab}
+                    onExamChange={setSelectedExamTypeTab}
+                    selectedYear={selectedYear}
+                    onYearChange={setSelectedYear}
+                    availableYears={availableYears}
+                    color={subjectColor}
+                  />
 
-                {/* View Mode Toggle: Grid vs List (Segmented Capsule) */}
-                <ViewModeToggle
-                  viewMode={viewMode}
-                  onChange={handleViewModeChange}
-                  color={subjectColor}
-                />
+                  <ViewModeToggle
+                    viewMode={viewMode}
+                    onChange={handleViewModeChange}
+                    color={subjectColor}
+                  />
+                </div>
               </div>
             </div>
 

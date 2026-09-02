@@ -16,7 +16,7 @@ export function SiteHeader() {
           to="/"
           className="flex items-center gap-2 rounded-sm py-1 transition-opacity hover:opacity-85 shrink-0"
         >
-          <Logo className="h-8 sm:h-10 md:h-11 w-auto text-ink" />
+          <Logo className="h-6 sm:h-8 md:h-10 w-auto text-ink" />
         </Link>
 
         <nav aria-label="Main" className="flex items-center gap-1 sm:gap-2">
@@ -44,7 +44,7 @@ export function SiteFooter() {
     <footer className="mt-20 sm:mt-24 border-t border-hairline bg-card/40">
       <div className="container-page flex flex-col gap-2 py-8 sm:py-10 text-[13px] text-mute px-4 sm:px-6">
         <Link to="/" className="w-fit transition-opacity hover:opacity-85">
-          <Logo className="h-7 sm:h-8 w-auto text-ink" />
+          <Logo className="h-5 sm:h-7 w-auto text-ink" />
         </Link>
         <p className="text-xs sm:text-[13px]">Every note. Every PYQ. Every file. One place.</p>
       </div>

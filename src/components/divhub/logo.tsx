@@ -5,7 +5,7 @@ interface LogoProps extends HTMLAttributes<HTMLSpanElement> {
   className?: string;
 }
 
-export function Logo({ className = "h-8 sm:h-9 md:h-10 w-auto", ...props }: LogoProps) {
+export function Logo({ className = "h-6 sm:h-8 md:h-10 w-auto", ...props }: LogoProps) {
   return (
     <span
       className={cn("inline-flex items-center shrink-0 select-none aspect-[886/229] max-w-full", className)}

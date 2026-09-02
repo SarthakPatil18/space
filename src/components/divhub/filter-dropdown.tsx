@@ -62,48 +62,44 @@ export function FilterDropdown({
 
   return (
     <div ref={containerRef} className="relative inline-block text-left">
-      {/* Filter Button (Sits right beside Grid/List Toggle) */}
+      {/* Filter Icon Button (Matching Grid/List Toggle) */}
       <button
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
-        className={`inline-flex h-11 items-center gap-2 rounded-xl border px-3 py-1 text-xs sm:text-sm font-medium transition-all shadow-2xs backdrop-blur-xs cursor-pointer ${
+        className={`relative flex size-11 items-center justify-center rounded-xl border transition-all duration-150 shadow-2xs backdrop-blur-xs cursor-pointer ${
           hasActiveFilters
-            ? "border-primary/50 bg-primary/10 text-primary font-semibold shadow-xs"
-            : "border-hairline bg-card/90 text-ink hover:bg-hairline-soft"
+            ? "border-primary/50 bg-primary/10 text-primary shadow-xs"
+            : "border-hairline bg-card/90 text-mute hover:text-ink hover:bg-hairline-soft"
         }`}
         style={
           hasActiveFilters
             ? {
-                borderColor: `${activeColor}60`,
-                backgroundColor: `${activeColor}12`,
+                borderColor: `${activeColor}70`,
+                backgroundColor: `${activeColor}15`,
                 color: activeColor,
+                boxShadow: `0 2px 8px -2px ${activeColor}40`,
               }
             : undefined
         }
         aria-expanded={isOpen}
         aria-haspopup="true"
-        title="Filter by Exam and Year"
+        aria-label="Filter material by exam and year"
+        title={hasActiveFilters ? `Filters active (${activeFiltersCount})` : "Filter by Exam & Year"}
       >
-        <Filter className="size-4 shrink-0" />
-        <span>Filter</span>
+        <Filter className="size-5" />
         {hasActiveFilters ? (
           <span
-            className="flex size-5 items-center justify-center rounded-full text-[10px] font-bold text-white shadow-2xs"
+            className="absolute -top-1 -right-1 flex size-4 items-center justify-center rounded-full text-[9px] font-bold text-white shadow-xs animate-in zoom-in"
             style={{ backgroundColor: activeColor }}
           >
             {activeFiltersCount}
           </span>
         ) : null}
-        <ChevronDown
-          className={`size-3.5 text-mute transition-transform duration-200 ${
-            isOpen ? "rotate-180" : ""
-          }`}
-        />
       </button>
 
       {/* Popover Dropdown Menu */}
       {isOpen ? (
-        <div className="absolute right-0 top-full mt-2 z-50 w-72 sm:w-80 rounded-2xl border border-hairline bg-card p-4 shadow-2xl backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150">
+        <div className="absolute right-0 top-full mt-2 z-50 w-72 sm:w-80 max-w-[calc(100vw-32px)] rounded-2xl border border-hairline bg-card p-4 shadow-2xl backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150">
           {/* Header */}
           <div className="flex items-center justify-between border-b border-hairline pb-2.5">
             <div className="flex items-center gap-1.5">

@@ -150,14 +150,14 @@ function SearchPage() {
 
               {results.data.resources.length > 0 ? (
                 <section aria-labelledby="resource-results">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <h2 id="resource-results" className="heading-md">
+                  <div className="flex items-center justify-between gap-3">
+                    <h2 id="resource-results" className="heading-md text-sm sm:text-base md:text-lg">
                       {filteredResources.length} resource
                       {filteredResources.length === 1 ? "" : "s"}
                     </h2>
 
                     {/* Filter Option + View Mode Toggle */}
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
                       <FilterDropdown
                         selectedExam={selectedExam}
                         onExamChange={setSelectedExam}
