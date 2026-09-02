@@ -1,11 +1,17 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { Upload, Trash2, FileText, CheckCircle2, Loader2, ExternalLink, X } from "lucide-react";
+import {
+  Upload,
+  Trash2,
+  Loader2,
+  ExternalLink,
+  Lock,
+  LogOut,
+} from "lucide-react";
 import { SiteFooter, SiteHeader } from "@/components/divhub/site-header";
 import { Breadcrumbs, EmptyState, SkeletonRows } from "@/components/divhub/ui-bits";
-import { createClient } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import {
   CATEGORIES,
@@ -13,26 +19,20 @@ import {
   subjectsQuery,
   allResourcesQuery,
   type Category,
-  formatFileSize,
-  formatDate,
   getExamType,
   getExamYear,
-  resolveResourceUrl,
 } from "@/lib/divhub";
+import {
+  adminVerifySecretServer,
+  adminGetSignedUploadUrlServer,
+  adminInsertResourceServer,
+  adminDeleteResourceServer,
+} from "@/lib/divhub.server";
 import { PdfViewerModal, type ModalResource } from "@/components/divhub/pdf-viewer-modal";
-
-const getAdminClient = () => {
-  const url = import.meta.env['VITE_SUPABASE_URL'];
-  const key = import.meta.env['VITE_SUPABASE_SERVICE_ROLE_KEY'];
-  if (url && key) {
-    return createClient(url, key);
-  }
-  return supabase;
-};
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
-    meta: [{ title: "Admin Portal — Upload Resources — SPACE" }],
+    meta: [{ title: "Admin Portal — SPACE" }],
   }),
   component: AdminPage,
 });
@@ -41,6 +41,18 @@ function AdminPage() {
   const queryClient = useQueryClient();
   const subjects = useQuery(subjectsQuery());
   const resources = useQuery(allResourcesQuery());
+
+  // Authentication State
+  const [authToken, setAuthToken] = useState<string>("");
+  const [passkeyInput, setPasskeyInput] = useState<string>("");
+  const [verifying, setVerifying] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const savedToken = sessionStorage.getItem("space_admin_token");
+      if (savedToken) setAuthToken(savedToken);
+    }
+  }, []);
 
   const [selectedSubjectId, setSelectedSubjectId] = useState<string>("");
   const [selectedCategory, setSelectedCategory] = useState<Category>("notes");
@@ -56,64 +68,49 @@ function AdminPage() {
   // Bulk Upload State
   const [uploadMode, setUploadMode] = useState<"bulk" | "single">("bulk");
   const [bulkFiles, setBulkFiles] = useState<File[]>([]);
-  const [bulkProgress, setBulkProgress] = useState<{ current: number; total: number; currentFileName: string } | null>(null);
+  const [bulkProgress, setBulkProgress] = useState<{
+    current: number;
+    total: number;
+    currentFileName: string;
+  } | null>(null);
 
-function getFileExtType(filename: string): string {
-  const ext = filename.split(".").pop()?.toLowerCase() ?? "";
-  if (["png", "jpg", "jpeg", "webp", "gif", "svg"].includes(ext)) return "image";
-  if (["ppt", "pptx", "key"].includes(ext)) return "ppt";
-  return "pdf";
-}
-
-async function insertResourceSafely(
-  client: ReturnType<typeof getAdminClient>,
-  payload: {
-    subject_id: string;
-    title: string;
-    category: Category;
-    file_path: string;
-    file_type: string;
-    file_size: number | null;
-    description?: string | null;
-    exam_type?: string | null;
-    year?: number | null;
-  }
-) {
-  const cleanPayload: Record<string, any> = {
-    subject_id: payload.subject_id,
-    title: payload.title,
-    category: payload.category,
-    file_path: payload.file_path,
-    file_type: payload.file_type,
-    file_size: payload.file_size,
-    description: payload.description || null,
-  };
-
-  if (payload.exam_type) cleanPayload["exam_type"] = payload.exam_type;
-  if (payload.year) cleanPayload["year"] = payload.year;
-
-  // First try: insert payload
-  let { error } = await client.from("resources").insert(cleanPayload);
-
-  // Fallback 1: If database schema does not have exam_type/year columns yet
-  if (error && (error.message?.includes("exam_type") || error.message?.includes("year") || error.code === "PGRST204")) {
-    delete cleanPayload["exam_type"];
-    delete cleanPayload["year"];
-    const retry = await client.from("resources").insert(cleanPayload);
-    error = retry.error;
+  function getFileExtType(filename: string): string {
+    const ext = filename.split(".").pop()?.toLowerCase() ?? "";
+    if (["png", "jpg", "jpeg", "webp", "gif", "svg"].includes(ext)) return "image";
+    if (["ppt", "pptx", "key"].includes(ext)) return "ppt";
+    return "pdf";
   }
 
-  // Fallback 2: If database has a strict 20MB file size check constraint
-  if (error && (error.message?.includes("file_size") || error.code === "23514")) {
-    cleanPayload["file_size"] = null;
-    const retry = await client.from("resources").insert(cleanPayload);
-    error = retry.error;
+  async function handleUnlock(e: React.FormEvent) {
+    e.preventDefault();
+    if (!passkeyInput.trim()) return;
+    setVerifying(true);
+    try {
+      const res = await adminVerifySecretServer({ data: passkeyInput.trim() });
+      if (res.success && res.token) {
+        setAuthToken(res.token);
+        if (typeof window !== "undefined") {
+          sessionStorage.setItem("space_admin_token", res.token);
+        }
+        toast.success("Admin portal unlocked");
+        setPasskeyInput("");
+      } else {
+        toast.error(res.error || "Invalid administrative passkey");
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Verification failed");
+    } finally {
+      setVerifying(false);
+    }
   }
 
-  if (error) {
-    throw new Error(`Database insert failed: ${error.message}`);
+  function handleLock() {
+    setAuthToken("");
+    if (typeof window !== "undefined") {
+      sessionStorage.removeItem("space_admin_token");
+    }
+    toast.info("Admin portal locked");
   }
-}
 
   async function handleUpload(e: React.FormEvent) {
     e.preventDefault();
@@ -133,16 +130,20 @@ async function insertResourceSafely(
     setUploading(true);
 
     try {
-      const client = getAdminClient();
       const subject = subjects.data?.find((s) => s.id === selectedSubjectId);
       const subjectCode = subject?.code.toLowerCase() ?? "general";
       const sanitizedName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
       const filePath = `${subjectCode}/${Date.now()}_${sanitizedName}`;
 
-      // 1. Upload to Supabase Storage Bucket
-      const { error: storageError } = await client.storage
+      // 1. Get signed upload URL from server using admin token
+      const uploadSign = await adminGetSignedUploadUrlServer({
+        data: { authToken, filePath },
+      });
+
+      // 2. Upload file directly to Supabase storage via signed upload token
+      const { error: storageError } = await supabase.storage
         .from("resources")
-        .upload(filePath, file, {
+        .uploadToSignedUrl(filePath, uploadSign.token, file, {
           cacheControl: "3600",
           upsert: true,
           contentType: file.type || "application/octet-stream",
@@ -152,17 +153,22 @@ async function insertResourceSafely(
         throw new Error(`Storage upload failed: ${storageError.message}`);
       }
 
-      // 2. Insert record into database table safely
-      await insertResourceSafely(client, {
-        subject_id: selectedSubjectId,
-        title: title.trim(),
-        category: selectedCategory,
-        file_path: filePath,
-        file_type: getFileExtType(file.name),
-        file_size: file.size,
-        description: description.trim() || null,
-        exam_type: selectedCategory === "pyqs" && examType ? examType : null,
-        year: selectedCategory === "pyqs" && year ? parseInt(year) : null,
+      // 3. Insert record securely via server function
+      await adminInsertResourceServer({
+        data: {
+          authToken,
+          payload: {
+            subject_id: selectedSubjectId,
+            title: title.trim(),
+            category: selectedCategory,
+            file_path: filePath,
+            file_type: getFileExtType(file.name),
+            file_size: file.size,
+            description: description.trim() || null,
+            exam_type: selectedCategory === "pyqs" && examType ? examType : null,
+            year: selectedCategory === "pyqs" && year ? parseInt(year, 10) : null,
+          },
+        },
       });
 
       toast.success("Resource uploaded successfully!");
@@ -170,14 +176,10 @@ async function insertResourceSafely(
       setDescription("");
       setFile(null);
       setExamType("");
-      
-      // Invalidate queries so UI refreshes everywhere
       await queryClient.invalidateQueries({ queryKey: ["resources"] });
     } catch (error) {
       console.error(error);
-      toast.error(
-        error instanceof Error ? error.message : "Failed to upload resource.",
-      );
+      toast.error(error instanceof Error ? error.message : "Failed to upload resource.");
     } finally {
       setUploading(false);
     }
@@ -197,56 +199,73 @@ async function insertResourceSafely(
     setUploading(true);
     const total = bulkFiles.length;
     let successCount = 0;
-    let failCount = 0;
+    let errorCount = 0;
 
-    const client = getAdminClient();
     const subject = subjects.data?.find((s) => s.id === selectedSubjectId);
     const subjectCode = subject?.code.toLowerCase() ?? "general";
 
     for (let i = 0; i < bulkFiles.length; i++) {
       const f = bulkFiles[i];
       if (!f) continue;
-      setBulkProgress({ current: i + 1, total, currentFileName: f.name });
+
+      setBulkProgress({
+        current: i + 1,
+        total,
+        currentFileName: f.name,
+      });
 
       const rawTitle = f.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " ").trim();
-      const derivedTitle = rawTitle ? rawTitle.charAt(0).toUpperCase() + rawTitle.slice(1) : f.name;
+      const autoTitle = rawTitle ? rawTitle.charAt(0).toUpperCase() + rawTitle.slice(1) : f.name;
+
       const sanitizedName = f.name.replace(/[^a-zA-Z0-9._-]/g, "_");
       const filePath = `${subjectCode}/${Date.now()}_${i}_${sanitizedName}`;
 
       try {
-        const { error: storageError } = await client.storage
+        const uploadSign = await adminGetSignedUploadUrlServer({
+          data: { authToken, filePath },
+        });
+
+        const { error: uploadError } = await supabase.storage
           .from("resources")
-          .upload(filePath, f, {
+          .uploadToSignedUrl(filePath, uploadSign.token, f, {
             cacheControl: "3600",
             upsert: true,
             contentType: f.type || "application/octet-stream",
           });
 
-        if (storageError) throw storageError;
+        if (uploadError) throw uploadError;
 
-        let derivedExamType: "mse" | "ese" | null = null;
-        let derivedYear: number | null = null;
+        let autoExamType: "mse" | "ese" | null = null;
+        let autoExamYear: number | null = null;
 
         if (selectedCategory === "pyqs") {
-          derivedExamType = getExamType({ title: f.name });
-          derivedYear = getExamYear({ title: f.name });
+          autoExamType = examType || getExamType({ title: f.name });
+          autoExamYear =
+            (year && year !== new Date().getFullYear().toString() ? parseInt(year, 10) : null) ||
+            getExamYear({ title: f.name }) ||
+            (year ? parseInt(year, 10) : null);
         }
 
-        await insertResourceSafely(client, {
-          subject_id: selectedSubjectId,
-          title: derivedTitle,
-          category: selectedCategory,
-          file_path: filePath,
-          file_type: getFileExtType(f.name),
-          file_size: f.size,
-          exam_type: derivedExamType,
-          year: derivedYear,
+        await adminInsertResourceServer({
+          data: {
+            authToken,
+            payload: {
+              subject_id: selectedSubjectId,
+              title: autoTitle,
+              category: selectedCategory,
+              file_path: filePath,
+              file_type: getFileExtType(f.name),
+              file_size: f.size,
+              exam_type: autoExamType,
+              year: autoExamYear,
+            },
+          },
         });
 
         successCount++;
       } catch (err) {
         console.error(`Failed to upload ${f.name}:`, err);
-        failCount++;
+        errorCount++;
       }
     }
 
@@ -255,75 +274,125 @@ async function insertResourceSafely(
     setBulkFiles([]);
 
     if (successCount > 0) {
-      toast.success(`Successfully uploaded ${successCount} resource${successCount > 1 ? "s" : ""}!`);
+      toast.success(
+        `Successfully uploaded ${successCount} resource${successCount > 1 ? "s" : ""}!`,
+      );
       await queryClient.invalidateQueries({ queryKey: ["resources"] });
     }
-
-    if (failCount > 0) {
-      toast.error(`Failed to upload ${failCount} resource${failCount > 1 ? "s" : ""}.`);
+    if (errorCount > 0) {
+      toast.error(`Failed to upload ${errorCount} resource${errorCount > 1 ? "s" : ""}.`);
     }
   }
 
-  async function handleDelete(resourceId: string, filePath: string | null) {
+  async function handleDelete(id: string, filePath?: string | null) {
     if (!confirm("Are you sure you want to delete this resource?")) return;
 
-    setDeletingId(resourceId);
+    setDeletingId(id);
     try {
-      const client = getAdminClient();
-      // 1. Remove from database
-      const { error: dbError } = await client
-        .from("resources")
-        .delete()
-        .eq("id", resourceId);
-
-      if (dbError) throw dbError;
-
-      // 2. If storage path exists, remove file
-      if (filePath) {
-        await client.storage.from("resources").remove([filePath]);
-      }
-
+      await adminDeleteResourceServer({
+        data: { authToken, id, filePath },
+      });
       toast.success("Resource deleted.");
       await queryClient.invalidateQueries({ queryKey: ["resources"] });
     } catch (error) {
       console.error(error);
-      toast.error("Failed to delete resource.");
+      toast.error(error instanceof Error ? error.message : "Failed to delete resource.");
     } finally {
       setDeletingId(null);
     }
   }
 
+  // Admin Passkey Gate View if unauthenticated
+  if (!authToken) {
+    return (
+      <div className="min-h-screen flex flex-col bg-background">
+        <SiteHeader />
+        <main className="container-page py-16 sm:py-24 flex-1 flex items-center justify-center px-4">
+          <div className="hairline-card p-6 sm:p-8 max-w-md w-full space-y-6 bg-card shadow-lg border border-hairline">
+            <div className="text-center space-y-2">
+              <div className="size-12 rounded-full bg-primary/10 text-primary flex items-center justify-center mx-auto">
+                <Lock className="size-6" />
+              </div>
+              <h1 className="heading-md text-ink">Admin Portal Access</h1>
+              <p className="text-xs text-mute">
+                This area is restricted to administrators. Enter your administrative passkey to manage resources.
+              </p>
+            </div>
+
+            <form onSubmit={handleUnlock} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-ink uppercase tracking-wider mb-1.5">
+                  Administrative Passkey
+                </label>
+                <input
+                  type="password"
+                  value={passkeyInput}
+                  onChange={(e) => setPasskeyInput(e.target.value)}
+                  placeholder="Enter passkey..."
+                  required
+                  autoFocus
+                  className="w-full rounded-md border border-hairline bg-background px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={verifying || !passkeyInput.trim()}
+                className="btn-primary-sm w-full justify-center py-2.5 text-sm cursor-pointer disabled:opacity-50"
+              >
+                {verifying ? (
+                  <>
+                    <Loader2 className="size-4 animate-spin" />
+                    Verifying...
+                  </>
+                ) : (
+                  "Unlock Portal"
+                )}
+              </button>
+            </form>
+          </div>
+        </main>
+        <SiteFooter />
+      </div>
+    );
+  }
+
+  // Authenticated Admin Portal
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-background">
       <SiteHeader />
       <main className="container-page py-10">
-        <Breadcrumbs
-          items={[
-            { label: "Home", to: "/" },
-            { label: "Admin Portal" },
-          ]}
-        />
+        <Breadcrumbs items={[{ label: "Home", to: "/" }, { label: "Admin Portal" }]} />
 
         <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="heading-lg">Admin Portal</h1>
+            <h1 className="heading-lg text-ink">Admin Portal</h1>
             <p className="mt-1 text-[14px] text-mute">
               Upload resources (Single or Bulk) and manage existing files for all subjects.
             </p>
           </div>
-          <Link to="/" className="btn-ghost-sm self-start sm:self-auto">
-            View Live Site
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link to="/" className="btn-ghost-sm self-start sm:self-auto">
+              View Live Site
+            </Link>
+            <button
+              type="button"
+              onClick={handleLock}
+              className="btn-ghost-sm text-destructive hover:text-destructive flex items-center gap-1.5"
+            >
+              <LogOut className="size-3.5" />
+              Lock
+            </button>
+          </div>
         </div>
 
         <div className="mt-8 grid gap-8 lg:grid-cols-12">
-          {/* Upload Card */}
+          {/* Upload Form (Single & Bulk) */}
           <div className="lg:col-span-5">
-            <div className="hairline-card p-6 space-y-6">
+            <div className="hairline-card p-6 space-y-6 bg-card">
+              {/* Header with Mode Switcher */}
               <div className="flex items-center justify-between border-b border-hairline pb-4">
                 <h2 className="text-base font-semibold text-ink">Upload Material</h2>
-                
-                {/* Upload Mode Switcher */}
                 <div className="flex items-center gap-1 bg-background border border-hairline rounded-lg p-0.5 text-xs font-medium">
                   <button
                     type="button"
@@ -365,59 +434,63 @@ async function insertResourceSafely(
                     className="w-full rounded-md border border-hairline bg-background px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-primary"
                   >
                     <option value="">Select a subject...</option>
-                    {subjects.data?.map((subject) => (
-                      <option key={subject.id} value={subject.id}>
-                        {subject.name} ({subject.code})
+                    {subjects.data?.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.name} ({s.code})
                       </option>
                     ))}
                   </select>
                 )}
               </div>
 
-              {/* Prominent Category / Material Type Visual Picker */}
+              {/* Category Selector */}
               <div>
                 <label className="block text-sm font-medium text-ink mb-1.5">
                   Category / Material Type *
                 </label>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                  {CATEGORIES.map((c) => (
+                  {CATEGORIES.map((cat) => (
                     <button
-                      key={c}
+                      key={cat}
                       type="button"
                       onClick={() => {
-                        setSelectedCategory(c);
-                        if (c !== "pyqs") {
+                        setSelectedCategory(cat);
+                        if (cat !== "pyqs") {
                           setExamType("");
                           setYear("");
                         }
                       }}
                       className={`flex flex-col items-center justify-center p-2.5 rounded-lg border text-center transition-all ${
-                        selectedCategory === c
+                        selectedCategory === cat
                           ? "bg-primary text-primary-foreground border-transparent font-semibold shadow-xs"
                           : "bg-card border-hairline text-ink hover:bg-hairline-soft"
                       }`}
                     >
-                      <span className="text-xs font-semibold">{CATEGORY_META[c].label}</span>
+                      <span className="text-xs font-semibold">
+                        {CATEGORY_META[cat].label}
+                      </span>
                       <span
                         className={`text-[10px] mt-0.5 line-clamp-1 ${
-                          selectedCategory === c ? "text-primary-foreground/80" : "text-mute"
+                          selectedCategory === cat
+                            ? "text-primary-foreground/80"
+                            : "text-mute"
                         }`}
                       >
-                        {c === "pyqs" ? "MSE & ESE Papers" : CATEGORY_META[c].blurb}
+                        {cat === "pyqs" ? "MSE & ESE Papers" : CATEGORY_META[cat].blurb}
                       </span>
                     </button>
                   ))}
                 </div>
               </div>
 
-              {/* Prominent PYQ Settings (MSE / ESE & Year) for BOTH Single and Bulk Modes */}
+              {/* PYQ-Specific Configuration */}
               {selectedCategory === "pyqs" && (
                 <div className="space-y-3 rounded-xl border border-primary/20 bg-primary/5 p-4">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold uppercase tracking-wider text-primary">
                       🎓 PYQ Exam Settings (Optional)
                     </span>
-                    {(examType || year) ? (
+                    {examType || year ? (
                       <button
                         type="button"
                         onClick={() => {
@@ -516,7 +589,6 @@ async function insertResourceSafely(
                     </div>
                   </div>
 
-                  {/* Quick Year Selection Pills with Toggle-off and Auto pill */}
                   <div>
                     <span className="block text-[11px] font-medium text-mute mb-1.5">
                       Quick select year (click active to deselect):
@@ -533,20 +605,22 @@ async function insertResourceSafely(
                       >
                         Auto / None
                       </button>
-                      {[2027, 2026, 2025, 2024, 2023, 2022, 2021, 2020, 2019, 2018, 2017].map((yr) => (
-                        <button
-                          key={yr}
-                          type="button"
-                          onClick={() => setYear(year === yr.toString() ? "" : yr.toString())}
-                          className={`rounded px-2 py-0.5 text-xs font-medium transition-all ${
-                            year === yr.toString()
-                              ? "bg-primary text-primary-foreground font-semibold shadow-xs"
-                              : "bg-card border border-hairline text-mute hover:text-ink hover:bg-hairline-soft"
-                          }`}
-                        >
-                          {yr}
-                        </button>
-                      ))}
+                      {[2027, 2026, 2025, 2024, 2023, 2022, 2021, 2020, 2019, 2018, 2017].map(
+                        (yr) => (
+                          <button
+                            key={yr}
+                            type="button"
+                            onClick={() => setYear(year === yr.toString() ? "" : yr.toString())}
+                            className={`rounded px-2 py-0.5 text-xs font-medium transition-all ${
+                              year === yr.toString()
+                                ? "bg-primary text-primary-foreground font-semibold shadow-xs"
+                                : "bg-card border border-hairline text-mute hover:text-ink hover:bg-hairline-soft"
+                            }`}
+                          >
+                            {yr}
+                          </button>
+                        ),
+                      )}
                     </div>
                   </div>
                 </div>
@@ -563,19 +637,18 @@ async function insertResourceSafely(
                       type="file"
                       multiple
                       accept=".pdf,.ppt,.pptx,.jpg,.jpeg,.png,.webp,application/pdf,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,image/*"
-                      onChange={(e) =>
-                        setBulkFiles(Array.from(e.target.files ?? []))
-                      }
+                      onChange={(e) => setBulkFiles(Array.from(e.target.files ?? []))}
                       disabled={uploading}
                       className="w-full text-sm text-mute file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 cursor-pointer"
                     />
                   </div>
 
-                  {/* Selected Files Preview List */}
                   {bulkFiles.length > 0 ? (
                     <div className="rounded-lg border border-hairline p-3 bg-background space-y-2">
                       <div className="flex items-center justify-between text-xs font-semibold text-ink">
-                        <span>Selected {bulkFiles.length} file{bulkFiles.length > 1 ? "s" : ""}</span>
+                        <span>
+                          Selected {bulkFiles.length} file{bulkFiles.length > 1 ? "s" : ""}
+                        </span>
                         <button
                           type="button"
                           onClick={() => setBulkFiles([])}
@@ -587,7 +660,10 @@ async function insertResourceSafely(
                       <div className="max-h-48 overflow-y-auto space-y-1.5 pr-1">
                         {bulkFiles.map((f, index) => {
                           const detectedType = examType || getExamType({ title: f.name });
-                          const detectedYear = (year && year !== new Date().getFullYear().toString() ? year : null) || getExamYear({ title: f.name }) || year;
+                          const detectedYear =
+                            (year && year !== new Date().getFullYear().toString() ? year : null) ||
+                            getExamYear({ title: f.name }) ||
+                            year;
                           return (
                             <div
                               key={index}
@@ -608,7 +684,7 @@ async function insertResourceSafely(
                                   </span>
                                 ) : null}
                               </div>
-                              <span className="shrink-0">{formatFileSize(f.size)}</span>
+                              <span className="shrink-0">{Math.round(f.size / 1024)} KB</span>
                             </div>
                           );
                         })}
@@ -616,11 +692,12 @@ async function insertResourceSafely(
                     </div>
                   ) : null}
 
-                  {/* Progress Banner */}
                   {bulkProgress ? (
                     <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 text-xs text-ink space-y-1">
                       <div className="flex items-center justify-between font-semibold">
-                        <span>Uploading file {bulkProgress.current} of {bulkProgress.total}...</span>
+                        <span>
+                          Uploading file {bulkProgress.current} of {bulkProgress.total}...
+                        </span>
                         <span>{Math.round((bulkProgress.current / bulkProgress.total) * 100)}%</span>
                       </div>
                       <p className="truncate text-mute">{bulkProgress.currentFileName}</p>
@@ -737,7 +814,7 @@ async function insertResourceSafely(
           {/* Manage Existing Resources */}
           <div className="lg:col-span-7">
             <div className="hairline-card p-6 space-y-4 bg-card">
-              <h2 className="heading-md flex items-center justify-between">
+              <h2 className="heading-md flex items-center justify-between text-ink">
                 <span>Uploaded Resources ({resources.data?.length ?? 0})</span>
               </h2>
 
@@ -765,8 +842,6 @@ async function insertResourceSafely(
                           </span>
                           <span>·</span>
                           <span>{CATEGORY_META[r.category]?.label}</span>
-                          <span>·</span>
-                          <span>{formatFileSize(r.file_size) ?? "PDF"}</span>
                         </p>
                       </div>
 
