@@ -15,6 +15,8 @@ import {
   type Category,
   formatFileSize,
   formatDate,
+  getExamType,
+  getExamYear,
   resolveResourceUrl,
 } from "@/lib/divhub";
 import { PdfViewerModal, type ModalResource } from "@/components/divhub/pdf-viewer-modal";
@@ -226,18 +228,8 @@ async function insertResourceSafely(
         let derivedYear: number | null = null;
 
         if (selectedCategory === "pyqs") {
-          const lowerName = f.name.toLowerCase();
-          if (lowerName.includes("mse") || lowerName.includes("mid")) {
-            derivedExamType = "mse";
-          } else if (lowerName.includes("ese") || lowerName.includes("end")) {
-            derivedExamType = "ese";
-          }
-
-          // Match 4-digit numbers between 2000 and 2030 (year)
-          const yearMatch = f.name.match(/\b(20[0-2][0-9]|2030)\b/);
-          if (yearMatch) {
-            derivedYear = parseInt(yearMatch[0]);
-          }
+          derivedExamType = getExamType({ title: f.name });
+          derivedYear = getExamYear({ title: f.name });
         }
 
         await insertResourceSafely(client, {
@@ -268,7 +260,7 @@ async function insertResourceSafely(
     }
 
     if (failCount > 0) {
-      toast.error(`Failed to upload ${failCount} file${failCount > 1 ? "s" : ""}.`);
+      toast.error(`Failed to upload ${failCount} resource${failCount > 1 ? "s" : ""}.`);
     }
   }
 
@@ -305,60 +297,66 @@ async function insertResourceSafely(
     <div className="min-h-screen">
       <SiteHeader />
       <main className="container-page py-10">
-        <Breadcrumbs items={[{ label: "Home", to: "/" }, { label: "Admin Portal" }]} />
-        
-        <div className="flex flex-col gap-1">
-          <p className="eyebrow">Admin Dashboard</p>
-          <h1 className="heading-lg">Upload Academic Resources</h1>
-          <p className="text-[15px] text-body max-w-xl">
-            Select a subject, choose a PDF file, and upload. Files will instantly appear for students across the website.
-          </p>
+        <Breadcrumbs
+          items={[
+            { label: "Home", to: "/" },
+            { label: "Admin Portal" },
+          ]}
+        />
+
+        <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="heading-lg">Admin Portal</h1>
+            <p className="mt-1 text-[14px] text-mute">
+              Upload resources (Single or Bulk) and manage existing files for all subjects.
+            </p>
+          </div>
+          <Link to="/" className="btn-ghost-sm self-start sm:self-auto">
+            View Live Site
+          </Link>
         </div>
 
         <div className="mt-8 grid gap-8 lg:grid-cols-12">
-          {/* Upload Form */}
+          {/* Upload Card */}
           <div className="lg:col-span-5">
-            <div className="hairline-card p-6 space-y-5 bg-card">
-              <div className="flex items-center justify-between">
-                <h2 className="heading-md flex items-center gap-2">
-                  <Upload className="size-5 text-primary" />
-                  Upload Resources
-                </h2>
+            <div className="hairline-card p-6 space-y-6">
+              <div className="flex items-center justify-between border-b border-hairline pb-4">
+                <h2 className="text-base font-semibold text-ink">Upload Material</h2>
+                
+                {/* Upload Mode Switcher */}
+                <div className="flex items-center gap-1 bg-background border border-hairline rounded-lg p-0.5 text-xs font-medium">
+                  <button
+                    type="button"
+                    onClick={() => setUploadMode("bulk")}
+                    className={`px-3 py-1 rounded-md transition-colors ${
+                      uploadMode === "bulk"
+                        ? "bg-card text-ink font-semibold shadow-xs"
+                        : "text-mute hover:text-ink"
+                    }`}
+                  >
+                    Bulk Upload
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setUploadMode("single")}
+                    className={`px-3 py-1 rounded-md transition-colors ${
+                      uploadMode === "single"
+                        ? "bg-card text-ink font-semibold shadow-xs"
+                        : "text-mute hover:text-ink"
+                    }`}
+                  >
+                    Single File
+                  </button>
+                </div>
               </div>
 
-              {/* Mode Selector Tabs */}
-              <div className="flex rounded-lg border border-hairline p-1 bg-hairline-soft/50">
-                <button
-                  type="button"
-                  onClick={() => setUploadMode("bulk")}
-                  className={`flex-1 py-1.5 text-xs font-semibold rounded-md transition-colors ${
-                    uploadMode === "bulk"
-                      ? "bg-card text-ink shadow-sm"
-                      : "text-mute hover:text-ink"
-                  }`}
-                >
-                  Bulk Upload (Multiple PDFs)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setUploadMode("single")}
-                  className={`flex-1 py-1.5 text-xs font-semibold rounded-md transition-colors ${
-                    uploadMode === "single"
-                      ? "bg-card text-ink shadow-sm"
-                      : "text-mute hover:text-ink"
-                  }`}
-                >
-                  Single File
-                </button>
-              </div>
-
-              {/* Shared Subject & Category Fields */}
+              {/* Subject Selector */}
               <div>
                 <label className="block text-sm font-medium text-ink mb-1.5">
                   Subject *
                 </label>
                 {subjects.isPending ? (
-                  <div className="h-10 animate-pulse rounded-md bg-hairline-soft" />
+                  <div className="h-10 animate-pulse rounded-md bg-hairline" />
                 ) : (
                   <select
                     value={selectedSubjectId}
@@ -426,18 +424,34 @@ async function insertResourceSafely(
                           Clear all
                         </button>
                       </div>
-                      <div className="max-h-36 overflow-y-auto space-y-1 pr-1">
-                        {bulkFiles.map((f, index) => (
-                          <div
-                            key={index}
-                            className="flex items-center justify-between text-xs text-mute py-1 border-b border-hairline/50 last:border-0"
-                          >
-                            <span className="truncate max-w-[220px] font-medium text-ink">
-                              {f.name}
-                            </span>
-                            <span>{formatFileSize(f.size)}</span>
-                          </div>
-                        ))}
+                      <div className="max-h-48 overflow-y-auto space-y-1.5 pr-1">
+                        {bulkFiles.map((f, index) => {
+                          const detectedType = getExamType({ title: f.name });
+                          const detectedYear = getExamYear({ title: f.name });
+                          return (
+                            <div
+                              key={index}
+                              className="flex items-center justify-between text-xs text-mute py-1 border-b border-hairline/50 last:border-0"
+                            >
+                              <div className="flex items-center gap-1.5 min-w-0 pr-2">
+                                <span className="truncate max-w-[160px] sm:max-w-[220px] font-medium text-ink">
+                                  {f.name}
+                                </span>
+                                {selectedCategory === "pyqs" && detectedType ? (
+                                  <span className="shrink-0 font-bold px-1.5 py-0.5 rounded text-[10px] bg-primary/10 text-primary uppercase">
+                                    {detectedType.toUpperCase()}
+                                  </span>
+                                ) : null}
+                                {selectedCategory === "pyqs" && detectedYear ? (
+                                  <span className="shrink-0 font-semibold px-1.5 py-0.5 rounded text-[10px] bg-hairline text-ink">
+                                    {detectedYear}
+                                  </span>
+                                ) : null}
+                              </div>
+                              <span className="shrink-0">{formatFileSize(f.size)}</span>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   ) : null}
@@ -480,9 +494,18 @@ async function insertResourceSafely(
                     </label>
                     <input
                       type="text"
-                      placeholder="e.g. Unit 1 — Asymptotic Notation Notes"
+                      placeholder="e.g. Unit 1 — Asymptotic Notation Notes or MSE 2019 Paper"
                       value={title}
-                      onChange={(e) => setTitle(e.target.value)}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setTitle(val);
+                        if (selectedCategory === "pyqs") {
+                          const dt = getExamType({ title: val });
+                          if (dt && !examType) setExamType(dt);
+                          const dy = getExamYear({ title: val });
+                          if (dy) setYear(dy.toString());
+                        }
+                      }}
                       required
                       className="w-full rounded-md border border-hairline bg-background px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-primary"
                     />
@@ -502,35 +525,60 @@ async function insertResourceSafely(
                   </div>
 
                   {selectedCategory === "pyqs" && (
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-sm font-medium text-ink mb-1.5">
-                          Exam Type *
-                        </label>
-                        <select
-                          value={examType}
-                          onChange={(e) => setExamType(e.target.value as "mse" | "ese" | "")}
-                          required
-                          className="w-full rounded-md border border-hairline bg-background px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-primary"
-                        >
-                          <option value="">Select exam type...</option>
-                          <option value="mse">Mid Semester Exam (MSE)</option>
-                          <option value="ese">End Semester Exam (ESE)</option>
-                        </select>
+                    <div className="space-y-3 rounded-lg border border-hairline p-3 bg-background/50">
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs font-semibold text-ink uppercase tracking-wider mb-1">
+                            Exam Type *
+                          </label>
+                          <select
+                            value={examType}
+                            onChange={(e) => setExamType(e.target.value as "mse" | "ese" | "")}
+                            required
+                            className="w-full rounded-md border border-hairline bg-background px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-primary"
+                          >
+                            <option value="">Select exam type...</option>
+                            <option value="mse">Mid Semester Exam (MSE)</option>
+                            <option value="ese">End Semester Exam (ESE)</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-xs font-semibold text-ink uppercase tracking-wider mb-1">
+                            Exam Year *
+                          </label>
+                          <input
+                            type="number"
+                            min="2010"
+                            max="2035"
+                            value={year}
+                            onChange={(e) => setYear(e.target.value)}
+                            required
+                            className="w-full rounded-md border border-hairline bg-background px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-primary"
+                          />
+                        </div>
                       </div>
+
+                      {/* Quick Year Selection Pills */}
                       <div>
-                        <label className="block text-sm font-medium text-ink mb-1.5">
-                          Exam Year *
-                        </label>
-                        <input
-                          type="number"
-                          min="2000"
-                          max="2100"
-                          value={year}
-                          onChange={(e) => setYear(e.target.value)}
-                          required
-                          className="w-full rounded-md border border-hairline bg-background px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-primary"
-                        />
+                        <span className="block text-[11px] font-medium text-mute mb-1.5">
+                          Quick select year:
+                        </span>
+                        <div className="flex flex-wrap gap-1.5">
+                          {[2027, 2026, 2025, 2024, 2023, 2022, 2021, 2020, 2019, 2018, 2017].map((yr) => (
+                            <button
+                              key={yr}
+                              type="button"
+                              onClick={() => setYear(yr.toString())}
+                              className={`rounded px-2 py-0.5 text-xs font-medium transition-all ${
+                                year === yr.toString()
+                                  ? "bg-primary text-primary-foreground font-semibold shadow-xs"
+                                  : "bg-card border border-hairline text-mute hover:text-ink hover:bg-hairline-soft"
+                              }`}
+                            >
+                              {yr}
+                            </button>
+                          ))}
+                        </div>
                       </div>
                     </div>
                   )}
@@ -542,7 +590,22 @@ async function insertResourceSafely(
                     <input
                       type="file"
                       accept=".pdf,.ppt,.pptx,.jpg,.jpeg,.png,.webp,application/pdf,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,image/*"
-                      onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+                      onChange={(e) => {
+                        const f = e.target.files?.[0] ?? null;
+                        setFile(f);
+                        if (f) {
+                          if (!title) {
+                            const rawTitle = f.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " ").trim();
+                            setTitle(rawTitle ? rawTitle.charAt(0).toUpperCase() + rawTitle.slice(1) : f.name);
+                          }
+                          if (selectedCategory === "pyqs") {
+                            const dt = getExamType({ title: f.name });
+                            if (dt) setExamType(dt);
+                            const dy = getExamYear({ title: f.name });
+                            if (dy) setYear(dy.toString());
+                          }
+                        }
+                      }}
                       required
                       className="w-full text-sm text-mute file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 cursor-pointer"
                     />

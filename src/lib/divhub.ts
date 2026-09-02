@@ -195,6 +195,61 @@ export function formatFileSize(bytes: number | null): string | null {
   return `${value < 10 && i > 0 ? value.toFixed(1) : Math.round(value)} ${units[i]}`;
 }
 
+export function getExamType(resource?: {
+  exam_type?: string | null;
+  title?: string | null;
+  description?: string | null;
+  file_path?: string | null;
+} | null): "mse" | "ese" | null {
+  if (!resource) return null;
+  if (resource.exam_type === "mse" || resource.exam_type === "ese") {
+    return resource.exam_type;
+  }
+  const text = `${resource.title || ""} ${resource.description || ""} ${resource.file_path || ""}`;
+  if (/\b(mse|mid\s*sem(ester)?)\b/i.test(text)) {
+    return "mse";
+  }
+  if (/\b(ese|end\s*sem(ester)?)\b/i.test(text)) {
+    return "ese";
+  }
+  return null;
+}
+
+export function getExamYear(resource?: {
+  year?: number | null;
+  title?: string | null;
+  description?: string | null;
+  file_path?: string | null;
+} | null): number | null {
+  if (!resource) return null;
+  if (typeof resource.year === "number" && !isNaN(resource.year) && resource.year >= 2000 && resource.year <= 2099) {
+    return resource.year;
+  }
+  const text = `${resource.title || ""} ${resource.description || ""} ${resource.file_path || ""}`;
+
+  // 1. Check for 4-digit years like 2017, 2018, 2019, 2024, 2027
+  const fullYearMatch = text.match(/\b(20[12][0-9])\b/);
+  if (fullYearMatch && fullYearMatch[1]) {
+    return parseInt(fullYearMatch[1], 10);
+  }
+
+  // 2. Check for academic year ranges like 2018-19, 18-19, 2019/20, 19/20
+  const rangeMatch = text.match(/\b(?:20)?([12][0-9])\s*[-/]\s*(?:20)?([12][0-9])\b/);
+  if (rangeMatch && rangeMatch[1]) {
+    return 2000 + parseInt(rangeMatch[1], 10);
+  }
+
+  // 3. Check for 2-digit years combined with pyq/mse/ese/year/paper/sem, e.g. "pyq 18", "mse-19", "27 ese", "paper 20"
+  const twoDigitMatch =
+    text.match(/(?:pyq|mse|ese|paper|yr|year|exam|sem)[-_ ]*([12][0-9])\b/i) ||
+    text.match(/\b([12][0-9])[-_ ]*(?:pyq|mse|ese|paper|yr|year|exam|sem)\b/i);
+  if (twoDigitMatch && twoDigitMatch[1]) {
+    return 2000 + parseInt(twoDigitMatch[1], 10);
+  }
+
+  return null;
+}
+
 export function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString(undefined, {
     day: "numeric",
@@ -202,8 +257,6 @@ export function formatDate(iso: string): string {
     year: "numeric",
   });
 }
-
-
 
 /** Resolves the openable URL for a resource (signed URL or public URL for uploaded files). */
 export async function resolveResourceUrl(

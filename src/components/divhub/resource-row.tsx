@@ -6,6 +6,8 @@ import {
   CATEGORY_META,
   formatDate,
   formatFileSize,
+  getExamType,
+  getExamYear,
   getSubjectColor,
   resolveResourceUrl,
   type Resource,
@@ -32,6 +34,8 @@ export function ResourceRow({
 
   const size = formatFileSize(resource.file_size);
   const subjectColor = getSubjectColor(resource.subjects);
+  const examType = getExamType(resource);
+  const examYear = getExamYear(resource);
 
   async function handleDownload() {
     try {
@@ -90,10 +94,24 @@ export function ResourceRow({
                 <span aria-hidden="true">·</span>
               </>
             ) : null}
-            {resource.year ? (
+            {examType ? (
               <>
-                <span className="font-semibold text-ink/75 bg-hairline px-1.5 py-0.5 rounded text-xs">
-                  {resource.year}
+                <span
+                  className="font-bold px-1.5 py-0.5 rounded text-[11px] uppercase tracking-wider"
+                  style={{
+                    backgroundColor: `${subjectColor}20`,
+                    color: subjectColor,
+                  }}
+                >
+                  {examType.toUpperCase()}
+                </span>
+                <span aria-hidden="true">·</span>
+              </>
+            ) : null}
+            {examYear ? (
+              <>
+                <span className="font-semibold text-ink/80 bg-hairline px-1.5 py-0.5 rounded text-xs">
+                  {examYear}
                 </span>
                 <span aria-hidden="true">·</span>
               </>
