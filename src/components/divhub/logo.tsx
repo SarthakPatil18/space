@@ -5,10 +5,10 @@ interface LogoProps extends HTMLAttributes<HTMLSpanElement> {
   className?: string;
 }
 
-export function Logo({ className = "h-8 sm:h-10 w-auto", ...props }: LogoProps) {
+export function Logo({ className = "h-8 sm:h-9 md:h-10 w-auto", ...props }: LogoProps) {
   return (
     <span
-      className={cn("inline-flex items-center shrink-0 select-none", className)}
+      className={cn("inline-flex items-center shrink-0 select-none aspect-[886/229] max-w-full", className)}
       role="img"
       aria-label="SPACE MITAOE"
       {...props}
@@ -16,12 +16,20 @@ export function Logo({ className = "h-8 sm:h-10 w-auto", ...props }: LogoProps) 
       <img
         src="/logo-light.png"
         alt="SPACE MITAOE"
-        className="h-full w-auto block dark:hidden object-contain"
+        width={886}
+        height={229}
+        className="logo-light-img h-full w-auto max-w-full object-contain"
+        loading="eager"
+        decoding="async"
       />
       <img
         src="/logo-dark.png"
         alt="SPACE MITAOE"
-        className="h-full w-auto hidden dark:block object-contain"
+        width={886}
+        height={229}
+        className="logo-dark-img h-full w-auto max-w-full object-contain"
+        loading="eager"
+        decoding="async"
       />
     </span>
   );
