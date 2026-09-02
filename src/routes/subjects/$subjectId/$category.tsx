@@ -57,7 +57,7 @@ function CategoryPage() {
     ? allResources.filter((r) => r.category === category)
     : [];
 
-  // Extract all unique years available in PYQs for this subject (or default recent years)
+  // Extract all unique years available in PYQs for this subject (or default recent years if empty)
   const availableYears = useMemo(() => {
     if (category !== "pyqs") return [];
     const years = new Set<number>();
@@ -65,8 +65,9 @@ function CategoryPage() {
       const y = getExamYear(r);
       if (y) years.add(y);
     }
-    // Include standard academic years if list is sparse
-    [2027, 2026, 2025, 2024, 2023, 2022, 2021, 2020, 2019, 2018, 2017].forEach((y) => years.add(y));
+    if (years.size === 0) {
+      [2024, 2023, 2022, 2021, 2020, 2019, 2018, 2017].forEach((y) => years.add(y));
+    }
     return Array.from(years).sort((a, b) => b - a);
   }, [category, categoryResources]);
 

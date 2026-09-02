@@ -206,12 +206,25 @@ export function getExamType(resource?: {
     return resource.exam_type;
   }
   const text = `${resource.title || ""} ${resource.description || ""} ${resource.file_path || ""}`;
-  if (/\b(mse|mid\s*sem(ester)?)\b/i.test(text)) {
+
+  // 1. Explicit MSE indicators (Mid Semester Exams, In-Sem, Cycle Tests, Unit Tests, Aug/Sep/Oct/Feb/Mar exam sessions)
+  if (
+    /\b(mse|mid\s*sem(ester)?|insem|in-sem|cycle|cycle\s*[12]|test|unit\s*test|sep|sept|september|oct|october|aug|august|feb|february|mar|march)\b/i.test(
+      text,
+    )
+  ) {
     return "mse";
   }
-  if (/\b(ese|end\s*sem(ester)?)\b/i.test(text)) {
+
+  // 2. Explicit ESE indicators (End Semester Exams, Regular Sem End, Jul/Nov/Dec/May/Apr/Jun sessions)
+  if (
+    /\b(ese|end\s*sem(ester)?|endsem|end-sem|jul|july|nov|november|dec|december|may|apr|april|jun|june)\b/i.test(
+      text,
+    )
+  ) {
     return "ese";
   }
+
   return null;
 }
 
