@@ -16,6 +16,12 @@ import { ResourceRow, type ResourceWithSubject } from "@/components/divhub/resou
 import { ResourceCard } from "@/components/divhub/resource-card";
 import { ViewModeToggle } from "@/components/divhub/view-mode-toggle";
 import {
+  FilterDropdown,
+  ActiveFilterChips,
+  type ExamFilter,
+  type YearFilter,
+} from "@/components/divhub/filter-dropdown";
+import {
   Breadcrumbs,
   EmptyState,
   ErrorState,
@@ -83,19 +89,24 @@ function CategoryPage() {
     ? allResources.filter((r) => r.category === category)
     : [];
 
-  // Extract all unique years available in PYQs for this subject
+  // Extract all unique years available in resources for this subject
   const availableYears = useMemo(() => {
-    if (category !== "pyqs") return [];
     const years = new Set<number>();
     for (const r of categoryResources) {
       const y = getExamYear(r);
       if (y) years.add(y);
     }
     if (years.size === 0) {
+      for (const r of allResources) {
+        const y = getExamYear(r);
+        if (y) years.add(y);
+      }
+    }
+    if (years.size === 0) {
       [2024, 2023, 2022, 2021, 2020, 2019, 2018, 2017].forEach((y) => years.add(y));
     }
     return Array.from(years).sort((a, b) => b - a);
-  }, [category, categoryResources]);
+  }, [categoryResources, allResources]);
 
   const query = searchQuery.trim().toLowerCase();
   const list = query
@@ -107,9 +118,8 @@ function CategoryPage() {
       )
     : categoryResources;
 
-  // Apply Year and Exam Type filters for PYQs
+  // Apply Year and Exam Type filters
   const filteredList = list.filter((r) => {
-    if (category !== "pyqs") return true;
     if (selectedYear !== "all") {
       const yr = getExamYear(r);
       if (yr !== selectedYear) return false;
@@ -221,7 +231,7 @@ function CategoryPage() {
                 </p>
               </div>
 
-              {/* Toolbar: Search + View Switcher */}
+              {/* Toolbar: Search + Filter Dropdown + View Mode Switcher */}
               <div className="flex flex-wrap items-center gap-2 sm:gap-3 shrink-0">
                 {/* Search in Subject Input */}
                 <div className="relative flex-1 sm:w-64">
@@ -245,6 +255,16 @@ function CategoryPage() {
                   ) : null}
                 </div>
 
+                {/* Filter Option (Beside Grid & Linear View) */}
+                <FilterDropdown
+                  selectedExam={selectedExamTypeTab}
+                  onExamChange={setSelectedExamTypeTab}
+                  selectedYear={selectedYear}
+                  onYearChange={setSelectedYear}
+                  availableYears={availableYears}
+                  color={subjectColor}
+                />
+
                 {/* View Mode Toggle: Grid vs List (Segmented Capsule) */}
                 <ViewModeToggle
                   viewMode={viewMode}
@@ -253,6 +273,20 @@ function CategoryPage() {
                 />
               </div>
             </div>
+
+            {/* Active Filter Chips Bar (Shown whenever Year or Exam filter is active) */}
+            <ActiveFilterChips
+              selectedExam={selectedExamTypeTab}
+              onExamClear={() => setSelectedExamTypeTab("all")}
+              selectedYear={selectedYear}
+              onYearClear={() => setSelectedYear("all")}
+              onResetAll={() => {
+                setSelectedExamTypeTab("all");
+                setSelectedYear("all");
+              }}
+              count={filteredList.length}
+              color={subjectColor}
+            />
 
             {/* Category Tabs Navigation */}
             <nav aria-label="Categories" className="mt-5 sm:mt-6 flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 -mx-4 px-4 sm:mx-0 sm:px-0 sm:flex-wrap">

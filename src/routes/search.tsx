@@ -10,12 +10,18 @@ import {
 import { ResourceCard } from "@/components/divhub/resource-card";
 import { ViewModeToggle } from "@/components/divhub/view-mode-toggle";
 import {
+  FilterDropdown,
+  ActiveFilterChips,
+  type ExamFilter,
+  type YearFilter,
+} from "@/components/divhub/filter-dropdown";
+import {
   Breadcrumbs,
   EmptyState,
   ErrorState,
   SkeletonRows,
 } from "@/components/divhub/ui-bits";
-import { searchQuery } from "@/lib/divhub";
+import { searchQuery, getExamType, getExamYear } from "@/lib/divhub";
 
 type SearchParams = { q?: string };
 
@@ -49,6 +55,9 @@ function SearchPage() {
   const term = q ?? "";
   const results = useQuery(searchQuery(term));
 
+  const [selectedExam, setSelectedExam] = useState<ExamFilter>("all");
+  const [selectedYear, setSelectedYear] = useState<YearFilter>("all");
+
   const [viewMode, setViewMode] = useState<"grid" | "list">(() => {
     if (typeof window !== "undefined") {
       const saved = localStorage.getItem("divhub_view_mode");
@@ -63,6 +72,26 @@ function SearchPage() {
       localStorage.setItem("divhub_view_mode", mode);
     }
   };
+
+  const rawResources = (results.data?.resources ?? []) as ResourceWithSubject[];
+
+  const availableYears = rawResources.reduce<number[]>((acc, r) => {
+    const yr = getExamYear(r);
+    if (yr && !acc.includes(yr)) acc.push(yr);
+    return acc;
+  }, []).sort((a, b) => b - a);
+
+  const filteredResources = rawResources.filter((r) => {
+    if (selectedExam !== "all") {
+      const et = getExamType(r);
+      if (et !== selectedExam) return false;
+    }
+    if (selectedYear !== "all") {
+      const yr = getExamYear(r);
+      if (yr !== selectedYear) return false;
+    }
+    return true;
+  });
 
   return (
     <div className="min-h-screen">
@@ -121,26 +150,65 @@ function SearchPage() {
 
               {results.data.resources.length > 0 ? (
                 <section aria-labelledby="resource-results">
-                  <div className="flex items-center justify-between gap-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <h2 id="resource-results" className="heading-md">
-                      {results.data.resources.length} resource
-                      {results.data.resources.length === 1 ? "" : "s"}
+                      {filteredResources.length} resource
+                      {filteredResources.length === 1 ? "" : "s"}
                     </h2>
 
-                    {/* View Mode Toggle */}
-                    <ViewModeToggle
-                      viewMode={viewMode}
-                      onChange={handleViewModeChange}
-                    />
+                    {/* Filter Option + View Mode Toggle */}
+                    <div className="flex items-center gap-2">
+                      <FilterDropdown
+                        selectedExam={selectedExam}
+                        onExamChange={setSelectedExam}
+                        selectedYear={selectedYear}
+                        onYearChange={setSelectedYear}
+                        availableYears={availableYears}
+                      />
+                      <ViewModeToggle
+                        viewMode={viewMode}
+                        onChange={handleViewModeChange}
+                      />
+                    </div>
                   </div>
 
+                  {/* Active Filter Chips */}
+                  <ActiveFilterChips
+                    selectedExam={selectedExam}
+                    onExamClear={() => setSelectedExam("all")}
+                    selectedYear={selectedYear}
+                    onYearClear={() => setSelectedYear("all")}
+                    onResetAll={() => {
+                      setSelectedExam("all");
+                      setSelectedYear("all");
+                    }}
+                    count={filteredResources.length}
+                  />
+
                   <div className="mt-4">
-                    {viewMode === "grid" ? (
+                    {filteredResources.length === 0 ? (
+                      <EmptyState
+                        title="No resources match this filter"
+                        description="Try clearing or adjusting your year and exam filters."
+                        action={
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedExam("all");
+                              setSelectedYear("all");
+                            }}
+                            className="btn-primary-sm"
+                          >
+                            Reset filters
+                          </button>
+                        }
+                      />
+                    ) : viewMode === "grid" ? (
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 items-stretch">
-                        {results.data.resources.map((resource) => (
+                        {filteredResources.map((resource) => (
                           <ResourceCard
                             key={resource.id}
-                            resource={resource as ResourceWithSubject}
+                            resource={resource}
                             showSubject
                             showCategory
                           />
@@ -148,10 +216,10 @@ function SearchPage() {
                       </div>
                     ) : (
                       <div className="space-y-2.5">
-                        {results.data.resources.map((resource) => (
+                        {filteredResources.map((resource) => (
                           <ResourceRow
                             key={resource.id}
-                            resource={resource as ResourceWithSubject}
+                            resource={resource}
                             showSubject
                             showCategory
                           />
