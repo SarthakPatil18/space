@@ -4,8 +4,6 @@ import { useState } from "react";
 import { toast } from "sonner";
 import {
   CATEGORY_META,
-  formatDate,
-  formatFileSize,
   getExamType,
   getExamYear,
   getSubjectColor,
@@ -32,7 +30,6 @@ export function ResourceRow({
   const [activeModalResource, setActiveModalResource] =
     useState<ModalResource>(null);
 
-  const size = formatFileSize(resource.file_size);
   const subjectColor = getSubjectColor(resource.subjects);
   const examType = getExamType(resource);
   const examYear = getExamYear(resource);
@@ -89,13 +86,13 @@ export function ResourceRow({
                 >
                   {resource.subjects.name}
                 </Link>
-                <span aria-hidden="true">·</span>
+                {(showCategory || examType || examYear) ? <span aria-hidden="true">·</span> : null}
               </>
             ) : null}
             {showCategory ? (
               <>
                 <span>{CATEGORY_META[resource.category].label}</span>
-                <span aria-hidden="true">·</span>
+                {(examType || examYear) ? <span aria-hidden="true">·</span> : null}
               </>
             ) : null}
             {examType ? (
@@ -109,24 +106,14 @@ export function ResourceRow({
                 >
                   {examType.toUpperCase()}
                 </span>
-                <span aria-hidden="true">·</span>
+                {examYear ? <span aria-hidden="true">·</span> : null}
               </>
             ) : null}
             {examYear ? (
-              <>
-                <span className="font-semibold text-ink/80 bg-hairline px-1.5 py-0.5 rounded text-xs">
-                  {examYear}
-                </span>
-                <span aria-hidden="true">·</span>
-              </>
+              <span className="font-semibold text-ink/80 bg-hairline px-1.5 py-0.5 rounded text-xs">
+                {examYear}
+              </span>
             ) : null}
-            {size ? (
-              <>
-                <span>{size}</span>
-                <span aria-hidden="true">·</span>
-              </>
-            ) : null}
-            <span>{formatDate(resource.created_at)}</span>
           </p>
         </div>
 
