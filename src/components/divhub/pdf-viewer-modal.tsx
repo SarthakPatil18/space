@@ -1,14 +1,12 @@
 import { useEffect, useState } from "react";
 import {
   Download,
-  ExternalLink,
   Loader2,
   X,
   AlertCircle,
   FileText,
   Image as ImageIcon,
   Presentation,
-  RefreshCw,
 } from "lucide-react";
 import { toast } from "sonner";
 import { resolveResourceUrl } from "@/lib/divhub";
@@ -51,8 +49,7 @@ export function PdfViewerModal({
   const [error, setError] = useState<string | null>(null);
   const [url, setUrl] = useState<string | null>(null);
   const [downloading, setDownloading] = useState(false);
-  // Default to Google Docs Viewer on mobile to prevent Android/iOS blank iframe issue
-  const [useGoogleViewer, setUseGoogleViewer] = useState<boolean>(() => isMobileUser());
+  const [isMobile, setIsMobile] = useState<boolean>(() => isMobileUser());
 
   const fileType = resource ? getFileType(resource.file_path || resource.title) : "pdf";
 
@@ -112,7 +109,7 @@ export function PdfViewerModal({
     setLoading(true);
     setError(null);
     setUrl(null);
-    setUseGoogleViewer(isMobileUser());
+    setIsMobile(isMobileUser());
 
     resolveResourceUrl(resource)
       .then((resolvedUrl) => {
@@ -166,56 +163,24 @@ export function PdfViewerModal({
           </div>
 
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-            {url && fileType === "pdf" ? (
+            {url ? (
               <button
                 type="button"
-                onClick={() => setUseGoogleViewer((prev) => !prev)}
-                className="btn-ghost-sm h-8 px-2 sm:px-2.5 text-xs inline-flex items-center gap-1 text-mute hover:text-ink"
-                title={
-                  useGoogleViewer
-                    ? "Switch to browser native viewer"
-                    : "Switch to Google Docs viewer"
-                }
+                onClick={handleDownload}
+                disabled={downloading}
+                className="btn-primary-sm h-8 sm:h-9 px-2.5 sm:px-3 text-xs sm:text-sm inline-flex items-center gap-1.5"
+                title="Download file"
+                aria-label="Download file"
               >
-                <RefreshCw className="size-3.5" />
-                <span className="hidden md:inline">
-                  {useGoogleViewer ? "Native view" : "Cloud view"}
+                {downloading ? (
+                  <Loader2 className="size-3.5 sm:size-4 animate-spin" />
+                ) : (
+                  <Download className="size-3.5 sm:size-4" />
+                )}
+                <span className="hidden sm:inline">
+                  {downloading ? "Downloading..." : "Download"}
                 </span>
               </button>
-            ) : null}
-
-            {url ? (
-              <>
-                <a
-                  href={url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn-ghost-sm h-8 sm:h-9 px-2.5 sm:px-3 text-xs sm:text-sm inline-flex items-center gap-1.5"
-                  title="Open in new tab / native viewer"
-                  aria-label="Open in new tab"
-                >
-                  <ExternalLink className="size-3.5 sm:size-4" />
-                  <span className="hidden sm:inline">Open in new tab</span>
-                  <span className="sm:hidden font-medium">Open</span>
-                </a>
-                <button
-                  type="button"
-                  onClick={handleDownload}
-                  disabled={downloading}
-                  className="btn-primary-sm h-8 sm:h-9 px-2.5 sm:px-3 text-xs sm:text-sm inline-flex items-center gap-1.5"
-                  title="Download file"
-                  aria-label="Download file"
-                >
-                  {downloading ? (
-                    <Loader2 className="size-3.5 sm:size-4 animate-spin" />
-                  ) : (
-                    <Download className="size-3.5 sm:size-4" />
-                  )}
-                  <span className="hidden sm:inline">
-                    {downloading ? "Downloading..." : "Download"}
-                  </span>
-                </button>
-              </>
             ) : null}
             <button
               type="button"
@@ -266,38 +231,15 @@ export function PdfViewerModal({
                 className="h-full w-full border-0 rounded-none sm:rounded-lg shadow-xs"
               />
             ) : (
-              <div className="relative h-full w-full flex flex-col">
-                <iframe
-                  key={useGoogleViewer ? "gview" : "native"}
-                  src={
-                    useGoogleViewer
-                      ? googleDocsViewerUrl
-                      : `${url}#toolbar=1&navpanes=0&zoom=100`
-                  }
-                  title={resource.title}
-                  className="h-full w-full border-0 rounded-none sm:rounded-lg shadow-xs flex-1"
-                />
-
-                {/* Mobile Fallback Helper Pill */}
-                <div className="sm:hidden absolute bottom-3 left-1/2 -translate-x-1/2 z-20 pointer-events-auto flex items-center gap-1.5 p-1 rounded-full bg-ink/90 text-background text-[11px] shadow-lg backdrop-blur-md border border-hairline/20">
-                  <a
-                    href={url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="px-3 py-1 rounded-full font-medium hover:opacity-90 flex items-center gap-1 text-background"
-                  >
-                    <ExternalLink className="size-3" />
-                    <span>Open in new tab</span>
-                  </a>
-                  <button
-                    type="button"
-                    onClick={() => setUseGoogleViewer((prev) => !prev)}
-                    className="px-2.5 py-1 rounded-full bg-background/20 font-semibold hover:bg-background/30 transition-colors"
-                  >
-                    {useGoogleViewer ? "Native view" : "Cloud view"}
-                  </button>
-                </div>
-              </div>
+              <iframe
+                src={
+                  isMobile
+                    ? googleDocsViewerUrl
+                    : `${url}#toolbar=1&navpanes=0&zoom=100`
+                }
+                title={resource.title}
+                className="h-full w-full border-0 rounded-none sm:rounded-lg shadow-xs"
+              />
             )
           ) : null}
         </div>
