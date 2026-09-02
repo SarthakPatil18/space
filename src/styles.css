@@ -4,6 +4,20 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* Ensure theme logo switching works across all renderers and SSR states */
+.logo-light-img {
+  display: block;
+}
+.logo-dark-img {
+  display: none;
+}
+html.dark .logo-light-img {
+  display: none !important;
+}
+html.dark .logo-dark-img {
+  display: block !important;
+}
+
 /*
  * DIVHUB design system — based on the supplied Vercel / Geist specification.
  * Ink-on-near-white, 1px hairlines, 6px functional radius, pill marketing CTAs,

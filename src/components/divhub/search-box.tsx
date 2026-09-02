@@ -2,7 +2,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Search, Loader2, FileText, X } from "lucide-react";
 import { useState, useRef, useEffect, type FormEvent } from "react";
-import { searchQuery, CATEGORY_META, openResource } from "@/lib/divhub";
+import { searchQuery, CATEGORY_META } from "@/lib/divhub";
 import { PdfViewerModal, type ModalResource } from "./pdf-viewer-modal";
 
 export function SearchBox({
@@ -163,7 +163,7 @@ export function SearchBox({
                           type="button"
                           onClick={() => {
                             setIsOpen(false);
-                            void openResource(r, setActivePdf);
+                            setActivePdf(r);
                           }}
                           className="w-full flex items-center justify-between px-3 py-2 text-left text-sm rounded-lg hover:bg-hairline-soft transition-colors group"
                         >

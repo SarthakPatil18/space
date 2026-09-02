@@ -7,7 +7,6 @@ import {
   getExamType,
   getExamYear,
   getSubjectColor,
-  openResource,
   resolveResourceUrl,
   type Resource,
 } from "@/lib/divhub";
@@ -70,7 +69,7 @@ export function ResourceRow({
 
         <div className="min-w-0 flex-1">
           <h3
-            onClick={() => void openResource(resource, setActiveModalResource)}
+            onClick={() => setActiveModalResource(resource)}
             className="truncate text-[15px] font-medium text-ink hover:text-primary cursor-pointer transition-colors"
             title={resource.title}
           >
@@ -121,7 +120,7 @@ export function ResourceRow({
         <div className="flex shrink-0 items-center gap-2">
           <button
             type="button"
-            onClick={() => void openResource(resource, setActiveModalResource)}
+            onClick={() => setActiveModalResource(resource)}
             className="btn-primary-sm"
           >
             <ExternalLink className="size-3.5" aria-hidden="true" />

@@ -7,7 +7,6 @@ import {
   getExamType,
   getExamYear,
   getSubjectColor,
-  openResource,
   resolveResourceUrl,
 } from "@/lib/divhub";
 import { PdfViewerModal, type ModalResource } from "./pdf-viewer-modal";
@@ -125,7 +124,7 @@ export function ResourceCard({
           {/* Resource Title */}
           <h3
             className="mt-2.5 text-[15px] font-semibold leading-snug tracking-tight text-ink line-clamp-2 min-h-[42px] group-hover:text-primary transition-colors cursor-pointer"
-            onClick={() => void openResource(resource, setActiveModalResource)}
+            onClick={() => setActiveModalResource(resource)}
             title={resource.title}
           >
             {resource.title}
@@ -144,7 +143,7 @@ export function ResourceCard({
           <div className="grid grid-cols-2 gap-2">
             <button
               type="button"
-              onClick={() => void openResource(resource, setActiveModalResource)}
+              onClick={() => setActiveModalResource(resource)}
               className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-ink text-background px-3 py-2 text-xs font-semibold shadow-2xs hover:opacity-90 active:scale-[0.98] transition-all cursor-pointer"
             >
               <ExternalLink className="size-3.5" aria-hidden="true" />
