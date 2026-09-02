@@ -11,10 +11,14 @@
 .logo-dark-img {
   display: none;
 }
-html.dark .logo-light-img {
+.dark .logo-light-img,
+html.dark .logo-light-img,
+:root.dark .logo-light-img {
   display: none !important;
 }
-html.dark .logo-dark-img {
+.dark .logo-dark-img,
+html.dark .logo-dark-img,
+:root.dark .logo-dark-img {
   display: block !important;
 }
 

@@ -16,7 +16,7 @@ export function SiteHeader() {
           to="/"
           className="flex items-center gap-2 rounded-sm py-1 transition-opacity hover:opacity-85 shrink-0"
         >
-          <Logo className="h-6 sm:h-8 md:h-10 w-auto text-ink" />
+          <Logo className="h-7 sm:h-8 md:h-10 w-auto text-ink" />
         </Link>
 
         <nav aria-label="Main" className="flex items-center gap-1 sm:gap-2">
