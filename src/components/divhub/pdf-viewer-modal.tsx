@@ -31,16 +31,8 @@ export function PdfViewerModal({
   const [error, setError] = useState<string | null>(null);
   const [url, setUrl] = useState<string | null>(null);
   const [downloading, setDownloading] = useState(false);
-  const [useGoogleViewer, setUseGoogleViewer] = useState(false);
 
   const fileType = resource ? getFileType(resource.file_path || resource.title) : "pdf";
-
-  // Reset viewer engine when resource changes
-  useEffect(() => {
-    if (resource) {
-      setUseGoogleViewer(fileType === "ppt");
-    }
-  }, [resource, fileType]);
 
   async function handleDownload() {
     if (!url || !resource) return;
@@ -149,16 +141,6 @@ export function PdfViewerModal({
           <div className="flex items-center gap-1 sm:gap-2 shrink-0">
             {url ? (
               <>
-                {fileType === "pdf" && (
-                  <button
-                    type="button"
-                    onClick={() => setUseGoogleViewer((prev) => !prev)}
-                    className="btn-ghost-sm px-2.5 py-1 text-[11px] sm:text-xs font-medium border border-hairline hidden md:inline-flex items-center"
-                    title="Switch between native PDF viewer and Google Web viewer"
-                  >
-                    {useGoogleViewer ? "Native Viewer" : "Google Viewer"}
-                  </button>
-                )}
                 <a
                   href={url}
                   target="_blank"
@@ -231,47 +213,18 @@ export function PdfViewerModal({
                   className="max-h-full max-w-full object-contain rounded-lg shadow-2xl border border-hairline"
                 />
               </div>
-            ) : fileType === "ppt" || useGoogleViewer ? (
+            ) : fileType === "ppt" ? (
               <iframe
                 src={`https://docs.google.com/gview?url=${encodeURIComponent(url)}&embedded=true`}
                 title={resource.title}
                 className="h-full w-full border-0 rounded-none sm:rounded-lg shadow-xs"
               />
             ) : (
-              <object
-                data={`${url}#toolbar=1&view=FitH`}
-                type="application/pdf"
+              <iframe
+                src={`${url}#toolbar=1&navpanes=0&zoom=100`}
+                title={resource.title}
                 className="h-full w-full border-0 rounded-none sm:rounded-lg shadow-xs"
-              >
-                <iframe
-                  src={url}
-                  title={resource.title}
-                  className="h-full w-full border-0"
-                >
-                  <div className="flex flex-col items-center justify-center h-full p-6 text-center space-y-3">
-                    <p className="text-sm text-mute">
-                      Your browser could not preview this PDF inside the page.
-                    </p>
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setUseGoogleViewer(true)}
-                        className="btn-primary-sm"
-                      >
-                        Switch to Google Viewer
-                      </button>
-                      <a
-                        href={url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="btn-ghost-sm"
-                      >
-                        Open in new tab
-                      </a>
-                    </div>
-                  </div>
-                </iframe>
-              </object>
+              />
             )
           ) : null}
         </div>
