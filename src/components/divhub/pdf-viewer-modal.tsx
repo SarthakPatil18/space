@@ -120,12 +120,12 @@ export function PdfViewerModal({
       onClick={onClose}
     >
       <div
-        className="relative flex h-[100dvh] w-screen flex-col bg-card overflow-hidden"
+        className="relative flex h-[100dvh] w-screen flex-col bg-card overflow-hidden pt-[env(safe-area-inset-top,0px)] pb-[env(safe-area-inset-bottom,0px)]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
-        <div className="flex items-center justify-between border-b border-hairline px-3 py-2 sm:px-6 sm:py-3 bg-background shrink-0 gap-2">
-          <div className="min-w-0 flex-1 pr-2">
+        <div className="flex items-center justify-between border-b border-hairline px-3 py-2.5 sm:px-6 sm:py-3 bg-background shrink-0 gap-2">
+          <div className="min-w-0 flex-1 pr-1">
             <h2 className="truncate text-sm sm:text-base font-semibold text-ink flex items-center gap-2">
               {fileType === "image" ? (
                 <ImageIcon className="size-4 sm:size-5 text-primary shrink-0" />
@@ -138,25 +138,26 @@ export function PdfViewerModal({
             </h2>
           </div>
 
-          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             {url ? (
               <>
                 <a
                   href={url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="btn-ghost-sm p-2 sm:px-3 sm:py-1.5 text-xs sm:text-sm"
-                  title="Open in new tab / native viewer"
-                  aria-label="Open in new tab"
+                  className="btn-ghost-sm h-9 px-2.5 sm:px-3 text-xs sm:text-sm inline-flex items-center gap-1.5"
+                  title="Open in phone browser PDF viewer"
+                  aria-label="Open in browser"
                 >
                   <ExternalLink className="size-4" />
                   <span className="hidden sm:inline">Open in new tab</span>
+                  <span className="sm:hidden font-medium">Open in Browser</span>
                 </a>
                 <button
                   type="button"
                   onClick={handleDownload}
                   disabled={downloading}
-                  className="btn-primary-sm p-2 sm:px-3 sm:py-1.5 text-xs sm:text-sm"
+                  className="btn-primary-sm h-9 px-2.5 sm:px-3 text-xs sm:text-sm inline-flex items-center gap-1.5"
                   title="Download file"
                   aria-label="Download file"
                 >
@@ -183,11 +184,11 @@ export function PdfViewerModal({
         </div>
 
         {/* Modal Body Container */}
-        <div className="relative flex-1 bg-black/5 dark:bg-black/40 w-full h-full overflow-hidden flex flex-col items-center justify-center p-0 sm:p-2">
+        <div className="relative flex-1 bg-black/5 dark:bg-black/40 w-full h-full overflow-hidden flex flex-col items-center justify-center p-0 sm:p-2 overscroll-contain">
           {loading ? (
             <div className="flex flex-col items-center justify-center p-8 text-center space-y-3">
               <Loader2 className="size-8 animate-spin text-primary" />
-              <p className="text-sm font-medium text-mute">Generating secure preview link...</p>
+              <p className="text-sm font-medium text-mute">Opening document...</p>
             </div>
           ) : error ? (
             <div className="flex flex-col items-center justify-center p-8 text-center max-w-md space-y-3">
@@ -220,11 +221,25 @@ export function PdfViewerModal({
                 className="h-full w-full border-0 rounded-none sm:rounded-lg shadow-xs"
               />
             ) : (
-              <iframe
-                src={`${url}#toolbar=1&navpanes=0&zoom=100`}
-                title={resource.title}
-                className="h-full w-full border-0 rounded-none sm:rounded-lg shadow-xs"
-              />
+              <div className="relative h-full w-full flex flex-col">
+                <iframe
+                  src={`${url}#toolbar=1&navpanes=0&zoom=100`}
+                  title={resource.title}
+                  className="h-full w-full border-0 rounded-none sm:rounded-lg shadow-xs flex-1"
+                />
+                {/* Mobile Quick Action Pill */}
+                <div className="sm:hidden absolute bottom-4 left-1/2 -translate-x-1/2 z-20 pointer-events-auto">
+                  <a
+                    href={url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary text-primary-foreground text-xs font-semibold shadow-xl border border-hairline/20 hover:opacity-95 active:scale-95 transition-all"
+                  >
+                    <ExternalLink className="size-3.5" />
+                    <span>Open in Browser PDF Viewer</span>
+                  </a>
+                </div>
+              </div>
             )
           ) : null}
         </div>

@@ -21,6 +21,7 @@ import {
   type Category,
   getExamType,
   getExamYear,
+  openResource,
 } from "@/lib/divhub";
 import {
   adminVerifySecretServer,
@@ -848,7 +849,7 @@ function AdminPage() {
                       <div className="flex items-center gap-2 shrink-0">
                         <button
                           type="button"
-                          onClick={() => setActiveAdminResource(r)}
+                          onClick={() => void openResource(r, setActiveAdminResource)}
                           className="btn-primary-sm py-1 px-2.5 text-xs"
                           title="Preview PDF"
                         >

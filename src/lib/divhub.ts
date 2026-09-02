@@ -304,3 +304,127 @@ export async function resolveResourceUrl(
   }
   throw new DivhubError("This resource has no file attached.");
 }
+
+/**
+ * Checks whether the current environment is a phone / mobile screen or touch device.
+ */
+export function isMobileDevice(): boolean {
+  if (typeof window === "undefined") return false;
+  const isTouch = "ontouchstart" in window || navigator.maxTouchPoints > 0;
+  const isNarrowScreen = window.innerWidth <= 768;
+  const isMobileUA = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(
+    navigator.userAgent,
+  );
+  return (isNarrowScreen && isTouch) || isMobileUA || window.innerWidth < 640;
+}
+
+/**
+ * Handles opening a resource document.
+ * On phone / mobile mode, opens the file in the browser's native PDF viewer tab with pinch-to-zoom & smooth scrolling.
+ * On desktop mode, opens the full-screen Google Drive-style preview modal.
+ */
+export async function openResource(
+  resource: {
+    file_path?: string | null;
+    file_url?: string | null;
+    title?: string | null;
+    id?: string;
+  },
+  fallbackModal?: (r: any) => void,
+) {
+  const isMobile = isMobileDevice();
+
+  if (!isMobile && fallbackModal) {
+    fallbackModal(resource);
+    return;
+  }
+
+  // Mobile / Phone mode: Open directly in the browser's native PDF viewer tab.
+  // Pre-open blank tab synchronously to prevent mobile Safari/Chrome popup blockers.
+  let newTab: Window | null = null;
+  try {
+    newTab = window.open("", "_blank");
+    if (newTab && newTab.document) {
+      newTab.document.write(`
+        <!DOCTYPE html>
+        <html lang="en">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>${resource.title ? `${resource.title} — Opening` : "Opening PDF..."}</title>
+            <style>
+              body {
+                margin: 0;
+                background-color: #0b0f19;
+                color: #e2e8f0;
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                min-height: 100vh;
+                text-align: center;
+                padding: 24px;
+                box-sizing: border-box;
+              }
+              .spinner {
+                width: 36px;
+                height: 36px;
+                border: 3px solid rgba(255, 255, 255, 0.15);
+                border-top-color: #38bdf8;
+                border-radius: 50%;
+                animation: spin 0.8s ease-in-out infinite;
+                margin-bottom: 16px;
+              }
+              @keyframes spin {
+                to { transform: rotate(360deg); }
+              }
+              h2 {
+                font-size: 16px;
+                font-weight: 600;
+                margin: 0 0 6px 0;
+                color: #ffffff;
+              }
+              p {
+                font-size: 13px;
+                color: #94a3b8;
+                margin: 0;
+                max-width: 280px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+              }
+            </style>
+          </head>
+          <body>
+            <div class="spinner"></div>
+            <h2>Opening in Browser PDF Viewer</h2>
+            <p>${resource.title || "Loading document..."}</p>
+          </body>
+        </html>
+      `);
+    }
+  } catch {
+    // Popup might be blocked in webviews; fallback to location navigation below
+  }
+
+  try {
+    const url = await resolveResourceUrl(resource);
+    if (newTab && !newTab.closed) {
+      newTab.location.href = url;
+    } else {
+      window.location.href = url;
+    }
+  } catch (error) {
+    if (newTab && !newTab.closed) {
+      newTab.close();
+    }
+    const message =
+      error instanceof Error ? error.message : "Could not open document.";
+    console.error("Failed to open resource:", error);
+    if (typeof window !== "undefined" && "toast" in window) {
+      (window as any).toast?.error(message);
+    }
+  }
+}
+
