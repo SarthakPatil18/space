@@ -277,21 +277,43 @@ export function formatDate(iso: string): string {
   });
 }
 
+/** Client-side signed URL cache to avoid redundant server round-trips. */
+const clientUrlCache = new Map<string, { url: string; expiresAt: number }>();
+const CLIENT_CACHE_TTL = 45 * 60 * 1000; // 45 minutes
+
+function getClientCachedUrl(key: string): string | null {
+  const entry = clientUrlCache.get(key);
+  if (entry && Date.now() < entry.expiresAt) return entry.url;
+  if (entry) clientUrlCache.delete(key);
+  return null;
+}
+
+function setClientCachedUrl(key: string, url: string): void {
+  clientUrlCache.set(key, { url, expiresAt: Date.now() + CLIENT_CACHE_TTL });
+}
+
 /** Resolves the openable temporary signed URL for a resource via secure server function. */
 export async function resolveResourceUrl(
   resource: { file_path?: string | null; file_url?: string | null },
 ): Promise<string> {
   if (resource.file_path) {
+    // Check client-side cache first
+    const cached = getClientCachedUrl(resource.file_path);
+    if (cached) return cached;
+
     try {
       const signedUrl = await getSignedUrlServer({ data: resource.file_path });
       if (signedUrl && (signedUrl.startsWith("http://") || signedUrl.startsWith("https://"))) {
+        setClientCachedUrl(resource.file_path, signedUrl);
         return signedUrl;
       }
       const baseUrl =
         (import.meta.env['VITE_SUPABASE_URL'] as string | undefined) ||
         "https://jykszzfxpqmjsnepqwhd.supabase.co";
       if (signedUrl) {
-        return `${baseUrl}${signedUrl.startsWith("/") ? "" : "/"}${signedUrl}`;
+        const fullUrl = `${baseUrl}${signedUrl.startsWith("/") ? "" : "/"}${signedUrl}`;
+        setClientCachedUrl(resource.file_path, fullUrl);
+        return fullUrl;
       }
     } catch (serverErr) {
       console.error("Could not sign URL for resource:", serverErr);
@@ -304,3 +326,28 @@ export async function resolveResourceUrl(
   }
   throw new DivhubError("This resource has no file attached.");
 }
+
+// In-flight prefetch tracking to avoid duplicate requests
+const prefetchInFlight = new Map<string, Promise<string>>();
+
+/** Pre-fetches the signed URL for a resource in the background (e.g. on hover).
+ *  Safe to call multiple times — deduplicates and never throws. */
+export function prefetchResourceUrl(
+  resource: { file_path?: string | null; file_url?: string | null } | null | undefined,
+): void {
+  if (!resource) return;
+  const key = resource.file_path || resource.file_url;
+  if (!key) return;
+
+  // Already cached
+  if (getClientCachedUrl(key)) return;
+  // Already in-flight
+  if (prefetchInFlight.has(key)) return;
+
+  const promise = resolveResourceUrl(resource)
+    .catch(() => "") // silently swallow — prefetch is best-effort
+    .finally(() => prefetchInFlight.delete(key));
+
+  prefetchInFlight.set(key, promise);
+}
+

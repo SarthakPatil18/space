@@ -8,6 +8,7 @@ import {
   getExamYear,
   getSubjectColor,
   resolveResourceUrl,
+  prefetchResourceUrl,
 } from "@/lib/divhub";
 import { PdfViewerModal, type ModalResource } from "./pdf-viewer-modal";
 import type { ResourceWithSubject } from "./resource-row";
@@ -58,6 +59,8 @@ export function ResourceCard({
   return (
     <>
       <article
+        onMouseEnter={() => prefetchResourceUrl(resource)}
+        onTouchStart={() => prefetchResourceUrl(resource)}
         className="hairline-card group relative flex flex-col justify-between h-full overflow-hidden p-4 sm:p-5 transition-all duration-200 hover:-translate-y-1 hover:shadow-float bg-card"
         style={{
           borderTopWidth: "3px",

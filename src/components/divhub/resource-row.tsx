@@ -8,6 +8,7 @@ import {
   getExamYear,
   getSubjectColor,
   resolveResourceUrl,
+  prefetchResourceUrl,
   type Resource,
 } from "@/lib/divhub";
 import { FileIcon } from "./ui-bits";
@@ -62,6 +63,8 @@ export function ResourceRow({
   return (
     <>
       <article
+        onMouseEnter={() => prefetchResourceUrl(resource)}
+        onTouchStart={() => prefetchResourceUrl(resource)}
         className="hairline-card flex flex-col gap-3 p-4 transition-all hover:shadow-whisper sm:flex-row sm:items-center sm:gap-4 hover:bg-[var(--hover-bg)]"
         style={{ "--hover-bg": `${subjectColor}05` } as React.CSSProperties}
       >
