@@ -19,21 +19,18 @@ export function SiteHeader() {
           <Logo className="h-8 sm:h-10 md:h-11 w-auto text-ink" />
         </Link>
 
-        <nav aria-label="Main" className="flex items-center gap-0.5 sm:gap-1.5 md:gap-2">
+        <nav aria-label="Main" className="flex items-center gap-1 sm:gap-2">
           {navLinks.map((link) => (
             <Link
               key={link.to}
               to={link.to}
               activeOptions={{ exact: link.to === "/" }}
-              className="rounded-full px-2 sm:px-3.5 py-1 sm:py-1.5 text-xs sm:text-sm font-medium text-body transition-colors hover:bg-hairline-soft hover:text-ink data-[status=active]:text-ink"
+              className="rounded-full px-2.5 sm:px-3.5 py-1 sm:py-1.5 text-xs sm:text-sm font-medium text-body transition-colors hover:bg-hairline-soft hover:text-ink data-[status=active]:text-ink"
             >
               {link.label}
             </Link>
           ))}
-          <Link to="/admin" className="btn-ghost-sm ml-0.5 sm:ml-1 px-2 sm:px-3 py-1 text-xs sm:text-sm">
-            Admin
-          </Link>
-          <div className="ml-0.5 sm:ml-1 border-l border-hairline pl-1 sm:pl-2">
+          <div className="ml-1 border-l border-hairline pl-2 sm:pl-3">
             <ThemeToggle />
           </div>
         </nav>
