@@ -1,4 +1,5 @@
 import { queryOptions } from "@tanstack/react-query";
+import { createClient } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { getSignedUrlServer } from "./divhub.server";
@@ -271,20 +272,56 @@ export function formatDate(iso: string): string {
   });
 }
 
+const getClientFallback = () => {
+  const url =
+    (import.meta.env['VITE_SUPABASE_URL'] as string | undefined) ||
+    "https://jykszzfxpqmjsnepqwhd.supabase.co";
+  const key =
+    (import.meta.env['VITE_SUPABASE_SERVICE_ROLE_KEY'] as string | undefined) ||
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp5a3N6emZ4cHFtanNuZXBxd2hkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NzY0ODc0MiwiZXhwIjoyMTAzMjI0NzQyfQ.2bk0pv72_wre7lIy3qL18ypT0UA1uzDYAyPq81u3cTg";
+  return createClient(url, key);
+};
+
 /** Resolves the openable URL for a resource (signed URL or public URL for uploaded files). */
 export async function resolveResourceUrl(
   resource: { file_path?: string | null; file_url?: string | null },
 ): Promise<string> {
   if (resource.file_path) {
+    // 1. Try server function first
     try {
       const signedUrl = await getSignedUrlServer({ data: resource.file_path });
-      if (signedUrl.startsWith("http://") || signedUrl.startsWith("https://")) {
+      if (signedUrl && (signedUrl.startsWith("http://") || signedUrl.startsWith("https://"))) {
         return signedUrl;
       }
       const baseUrl =
         (import.meta.env['VITE_SUPABASE_URL'] as string | undefined) ||
         "https://jykszzfxpqmjsnepqwhd.supabase.co";
-      return `${baseUrl}${signedUrl.startsWith("/") ? "" : "/"}${signedUrl}`;
+      if (signedUrl) {
+        return `${baseUrl}${signedUrl.startsWith("/") ? "" : "/"}${signedUrl}`;
+      }
+    } catch (serverErr) {
+      console.warn("getSignedUrlServer error, falling back to direct client:", serverErr);
+    }
+
+    // 2. Direct fallback using client
+    try {
+      const client = getClientFallback();
+      const { data, error } = await client.storage
+        .from("resources")
+        .createSignedUrl(resource.file_path, 3600);
+
+      if (data?.signedUrl) {
+        const signedUrl = data.signedUrl;
+        if (signedUrl.startsWith("http://") || signedUrl.startsWith("https://")) {
+          return signedUrl;
+        }
+        const baseUrl =
+          (import.meta.env['VITE_SUPABASE_URL'] as string | undefined) ||
+          "https://jykszzfxpqmjsnepqwhd.supabase.co";
+        return `${baseUrl}${signedUrl.startsWith("/") ? "" : "/"}${signedUrl}`;
+      }
+
+      if (error) throw error;
     } catch (err) {
       console.error("Signed URL generation error:", err);
       throw new DivhubError("Could not generate a link for this file. Please try again.");

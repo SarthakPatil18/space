@@ -11,7 +11,7 @@ const getAdminClient = () => {
   return createClient(url, key);
 };
 
-export const getSignedUrlServer = createServerFn({ method: "GET" })
+export const getSignedUrlServer = createServerFn({ method: "POST" })
   .validator((filePath: string) => filePath)
   .handler(async ({ data: filePath }) => {
     const adminSupabase = getAdminClient();
