@@ -53,7 +53,10 @@ function createSupabaseFetch(supabaseKey: string): typeof fetch {
   };
 }
 
+let _adminClient: ReturnType<typeof createClient> | null = null;
+
 const getAdminClient = () => {
+  if (_adminClient) return _adminClient;
   const url =
     getEnvValue("SUPABASE_URL") ||
     getEnvValue("VITE_SUPABASE_URL") ||
@@ -62,12 +65,37 @@ const getAdminClient = () => {
   if (!key) {
     throw new Error("Server configuration error: SUPABASE_SERVICE_ROLE_KEY is missing");
   }
-  return createClient(url, key, {
+  _adminClient = createClient(url, key, {
     global: {
       fetch: createSupabaseFetch(key),
     },
   });
+  return _adminClient;
 };
+
+// In-memory signed URL cache — avoids repeated Supabase Storage API calls.
+// TTL is 50 minutes (URLs expire in 60 min, so 10 min safety margin).
+const signedUrlCache = new Map<string, { url: string; expiresAt: number }>();
+const SIGNED_URL_TTL_MS = 50 * 60 * 1000; // 50 minutes
+const SIGNED_URL_EXPIRY_S = 3600; // 1 hour
+
+function getCachedSignedUrl(filePath: string): string | null {
+  const entry = signedUrlCache.get(filePath);
+  if (entry && Date.now() < entry.expiresAt) return entry.url;
+  if (entry) signedUrlCache.delete(filePath);
+  return null;
+}
+
+function setCachedSignedUrl(filePath: string, url: string): void {
+  signedUrlCache.set(filePath, { url, expiresAt: Date.now() + SIGNED_URL_TTL_MS });
+  // Evict old entries if cache grows too large
+  if (signedUrlCache.size > 500) {
+    const now = Date.now();
+    for (const [key, val] of signedUrlCache) {
+      if (now >= val.expiresAt) signedUrlCache.delete(key);
+    }
+  }
+}
 
 function getAdminSecret(): string {
   return getEnvValue("ADMIN_SECRET") || "mitaoe@admin2026";
@@ -98,15 +126,21 @@ export const getSignedUrlServer = createServerFn({ method: "POST" })
     if (!filePath || typeof filePath !== "string") {
       throw new Error("Invalid file path");
     }
+
+    // Return cached URL if still valid
+    const cached = getCachedSignedUrl(filePath);
+    if (cached) return cached;
+
     const adminSupabase = getAdminClient();
     const { data, error } = await adminSupabase.storage
       .from("resources")
-      .createSignedUrl(filePath, 3600);
+      .createSignedUrl(filePath, SIGNED_URL_EXPIRY_S);
 
     if (error || !data?.signedUrl) {
       throw new Error(error?.message || "Failed to generate signed URL");
     }
 
+    setCachedSignedUrl(filePath, data.signedUrl);
     return data.signedUrl;
   });
 
