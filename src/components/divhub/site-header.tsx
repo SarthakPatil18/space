@@ -10,30 +10,30 @@ const navLinks = [
 
 export function SiteHeader() {
   return (
-    <header className="sticky top-0 z-30 border-b border-hairline bg-background/85 backdrop-blur">
-      <div className="container-page flex h-16 items-center justify-between gap-4">
+    <header className="sticky top-0 z-30 border-b border-hairline bg-background/90 backdrop-blur-md">
+      <div className="container-page flex h-14 sm:h-16 items-center justify-between gap-2 sm:gap-4 px-3 sm:px-6">
         <Link
           to="/"
-          className="flex items-center gap-2 rounded-sm py-1 transition-opacity hover:opacity-85"
+          className="flex items-center gap-2 rounded-sm py-1 transition-opacity hover:opacity-85 shrink-0"
         >
-          <Logo className="h-10 sm:h-11 w-auto text-ink" />
+          <Logo className="h-8 sm:h-10 md:h-11 w-auto text-ink" />
         </Link>
 
-        <nav aria-label="Main" className="flex items-center gap-1 sm:gap-2">
+        <nav aria-label="Main" className="flex items-center gap-0.5 sm:gap-1.5 md:gap-2">
           {navLinks.map((link) => (
             <Link
               key={link.to}
               to={link.to}
               activeOptions={{ exact: link.to === "/" }}
-              className="rounded-full px-3.5 py-1.5 text-sm font-medium text-body transition-colors hover:bg-hairline-soft hover:text-ink data-[status=active]:text-ink"
+              className="rounded-full px-2 sm:px-3.5 py-1 sm:py-1.5 text-xs sm:text-sm font-medium text-body transition-colors hover:bg-hairline-soft hover:text-ink data-[status=active]:text-ink"
             >
               {link.label}
             </Link>
           ))}
-          <Link to="/admin" className="btn-ghost-sm ml-1">
+          <Link to="/admin" className="btn-ghost-sm ml-0.5 sm:ml-1 px-2 sm:px-3 py-1 text-xs sm:text-sm">
             Admin
           </Link>
-          <div className="ml-1 border-l border-hairline pl-2">
+          <div className="ml-0.5 sm:ml-1 border-l border-hairline pl-1 sm:pl-2">
             <ThemeToggle />
           </div>
         </nav>
@@ -44,12 +44,12 @@ export function SiteHeader() {
 
 export function SiteFooter() {
   return (
-    <footer className="mt-24 border-t border-hairline">
-      <div className="container-page flex flex-col gap-2 py-10 text-[13px] text-mute">
+    <footer className="mt-20 sm:mt-24 border-t border-hairline bg-card/40">
+      <div className="container-page flex flex-col gap-2 py-8 sm:py-10 text-[13px] text-mute px-4 sm:px-6">
         <Link to="/" className="w-fit transition-opacity hover:opacity-85">
-          <Logo className="h-8 w-auto text-ink" />
+          <Logo className="h-7 sm:h-8 w-auto text-ink" />
         </Link>
-        <p>Every note. Every PYQ. Every file. One place.</p>
+        <p className="text-xs sm:text-[13px]">Every note. Every PYQ. Every file. One place.</p>
       </div>
     </footer>
   );

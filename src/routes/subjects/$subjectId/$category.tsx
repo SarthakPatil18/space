@@ -255,7 +255,7 @@ function CategoryPage() {
             </div>
 
             {/* Category Tabs Navigation */}
-            <nav aria-label="Categories" className="mt-6 flex flex-wrap gap-2">
+            <nav aria-label="Categories" className="mt-5 sm:mt-6 flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 -mx-4 px-4 sm:mx-0 sm:px-0 sm:flex-wrap">
               {CATEGORIES.map((c) => {
                 const count = allResources.filter((r) => r.category === c).length;
                 const isCurrent = c === category;
@@ -264,7 +264,7 @@ function CategoryPage() {
                     key={c}
                     to="/subjects/$subjectId/$category"
                     params={{ subjectId, category: c }}
-                    className="inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-sm font-medium transition-all duration-150 hover:opacity-90"
+                    className="inline-flex items-center gap-2 rounded-full border px-3.5 sm:px-4 py-1.5 text-xs sm:text-sm font-medium transition-all duration-150 hover:opacity-90 shrink-0"
                     style={
                       isCurrent
                         ? {
@@ -282,7 +282,7 @@ function CategoryPage() {
                   >
                     <span>{CATEGORY_META[c].label}</span>
                     <span
-                      className="rounded-full px-1.5 py-0.2 text-[11px] font-semibold"
+                      className="rounded-full px-1.5 py-0.2 text-[10px] sm:text-[11px] font-semibold"
                       style={{
                         backgroundColor: isCurrent ? "rgba(255,255,255,0.25)" : "var(--muted)",
                         color: isCurrent ? "#ffffff" : "var(--mute)",
@@ -297,18 +297,18 @@ function CategoryPage() {
 
             {/* PYQ Year and Exam Filter Bar (Always visible on PYQ tab) */}
             {category === "pyqs" ? (
-              <div className="mt-6 rounded-2xl border border-hairline bg-card/70 p-4 backdrop-blur-md space-y-3.5 shadow-2xs">
-                <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="mt-5 sm:mt-6 rounded-2xl border border-hairline bg-card/70 p-3.5 sm:p-4 backdrop-blur-md space-y-3.5 shadow-2xs">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                   {/* Year Filter Chips */}
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    <span className="text-xs font-semibold text-mute uppercase tracking-wider mr-1 flex items-center gap-1">
+                  <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1 sm:pb-0 sm:flex-wrap max-w-full">
+                    <span className="text-xs font-semibold text-mute uppercase tracking-wider mr-1 flex items-center gap-1 shrink-0">
                       <Filter className="size-3" />
                       Year:
                     </span>
                     <button
                       type="button"
                       onClick={() => setSelectedYear("all")}
-                      className={`rounded-full px-3 py-1 text-xs font-medium transition-all ${
+                      className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium transition-all ${
                         selectedYear === "all"
                           ? "bg-ink text-background font-semibold shadow-xs"
                           : "bg-background border border-hairline text-mute hover:text-ink hover:bg-hairline-soft"
@@ -321,7 +321,7 @@ function CategoryPage() {
                         key={yr}
                         type="button"
                         onClick={() => setSelectedYear(yr)}
-                        className={`rounded-full px-3 py-1 text-xs font-medium transition-all ${
+                        className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium transition-all ${
                           selectedYear === yr
                             ? "text-white font-semibold shadow-xs"
                             : "bg-background border border-hairline text-mute hover:text-ink hover:bg-hairline-soft"
@@ -338,11 +338,11 @@ function CategoryPage() {
                   </div>
 
                   {/* Exam Type Tabs */}
-                  <div className="flex items-center gap-1 bg-background border border-hairline rounded-lg p-0.5 text-xs font-medium">
+                  <div className="flex items-center gap-1 bg-background border border-hairline rounded-lg p-0.5 text-xs font-medium shrink-0 self-start sm:self-auto">
                     <button
                       type="button"
                       onClick={() => setSelectedExamTypeTab("all")}
-                      className={`px-3 py-1 rounded-md transition-colors ${
+                      className={`px-2.5 sm:px-3 py-1 rounded-md transition-colors ${
                         selectedExamTypeTab === "all"
                           ? "bg-card text-ink font-semibold shadow-xs"
                           : "text-mute hover:text-ink"
@@ -353,7 +353,7 @@ function CategoryPage() {
                     <button
                       type="button"
                       onClick={() => setSelectedExamTypeTab("mse")}
-                      className={`px-3 py-1 rounded-md transition-colors ${
+                      className={`px-2.5 sm:px-3 py-1 rounded-md transition-colors ${
                         selectedExamTypeTab === "mse"
                           ? "bg-card text-ink font-semibold shadow-xs"
                           : "text-mute hover:text-ink"
@@ -364,7 +364,7 @@ function CategoryPage() {
                     <button
                       type="button"
                       onClick={() => setSelectedExamTypeTab("ese")}
-                      className={`px-3 py-1 rounded-md transition-colors ${
+                      className={`px-2.5 sm:px-3 py-1 rounded-md transition-colors ${
                         selectedExamTypeTab === "ese"
                           ? "bg-card text-ink font-semibold shadow-xs"
                           : "text-mute hover:text-ink"

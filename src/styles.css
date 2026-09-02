@@ -209,6 +209,64 @@
   border-radius: 12px;
 }
 
+@utility btn-primary-sm {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background-color: var(--color-ink);
+  color: var(--color-background);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 18px;
+  padding: 6px 14px;
+  border-radius: 8px;
+  transition: all 150ms ease;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+.btn-primary-sm:hover {
+  opacity: 0.9;
+}
+.btn-primary-sm:active {
+  transform: scale(0.98);
+}
+
+@utility btn-ghost-sm {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background-color: transparent;
+  color: var(--color-ink);
+  border: 1px solid var(--color-hairline);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 18px;
+  padding: 6px 14px;
+  border-radius: 8px;
+  transition: all 150ms ease;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+.btn-ghost-sm:hover {
+  background-color: var(--color-hairline-soft);
+  color: var(--color-ink);
+}
+.btn-ghost-sm:active {
+  transform: scale(0.98);
+}
+
+@utility no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 @utility mesh-gradient {
   background-image:
     radial-gradient(60% 90% at 15% 10%, rgba(0, 124, 240, 0.22), transparent 70%),

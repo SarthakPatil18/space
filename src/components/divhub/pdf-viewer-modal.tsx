@@ -116,37 +116,38 @@ export function PdfViewerModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black animate-in fade-in duration-200"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in duration-200"
       onClick={onClose}
     >
       <div
-        className="relative flex h-screen w-screen flex-col bg-card overflow-hidden"
+        className="relative flex h-[100dvh] w-screen flex-col bg-card overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
-        <div className="flex items-center justify-between border-b border-hairline px-4 py-3 sm:px-6 bg-background shrink-0">
-          <div className="min-w-0 flex-1 pr-4">
-            <h2 className="truncate text-base sm:text-lg font-semibold text-ink flex items-center gap-2">
+        <div className="flex items-center justify-between border-b border-hairline px-3 py-2 sm:px-6 sm:py-3 bg-background shrink-0 gap-2">
+          <div className="min-w-0 flex-1 pr-2">
+            <h2 className="truncate text-sm sm:text-base font-semibold text-ink flex items-center gap-2">
               {fileType === "image" ? (
-                <ImageIcon className="size-5 text-primary shrink-0" />
+                <ImageIcon className="size-4 sm:size-5 text-primary shrink-0" />
               ) : fileType === "ppt" ? (
-                <Presentation className="size-5 text-primary shrink-0" />
+                <Presentation className="size-4 sm:size-5 text-primary shrink-0" />
               ) : (
-                <FileText className="size-5 text-primary shrink-0" />
+                <FileText className="size-4 sm:size-5 text-primary shrink-0" />
               )}
               <span className="truncate">{resource.title}</span>
             </h2>
           </div>
 
-          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          <div className="flex items-center gap-1 sm:gap-2.5 shrink-0">
             {url ? (
               <>
                 <a
                   href={url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="btn-ghost-sm gap-1.5 text-xs sm:text-sm"
-                  title="Open in new tab"
+                  className="btn-ghost-sm p-2 sm:px-3 sm:py-1.5 text-xs sm:text-sm"
+                  title="Open in new tab / native viewer"
+                  aria-label="Open in new tab"
                 >
                   <ExternalLink className="size-4" />
                   <span className="hidden sm:inline">Open in new tab</span>
@@ -155,7 +156,9 @@ export function PdfViewerModal({
                   type="button"
                   onClick={handleDownload}
                   disabled={downloading}
-                  className="btn-primary-sm gap-1.5 text-xs sm:text-sm"
+                  className="btn-primary-sm p-2 sm:px-3 sm:py-1.5 text-xs sm:text-sm"
+                  title="Download file"
+                  aria-label="Download file"
                 >
                   {downloading ? (
                     <Loader2 className="size-4 animate-spin" />
@@ -171,7 +174,7 @@ export function PdfViewerModal({
             <button
               type="button"
               onClick={onClose}
-              className="rounded-lg p-2 text-mute hover:bg-hairline-soft hover:text-ink transition-colors"
+              className="flex size-9 items-center justify-center rounded-lg text-mute hover:bg-hairline-soft hover:text-ink transition-colors cursor-pointer"
               aria-label="Close Preview"
             >
               <X className="size-5" />
@@ -180,7 +183,7 @@ export function PdfViewerModal({
         </div>
 
         {/* Modal Body Container */}
-        <div className="relative flex-1 bg-black/10 w-full h-full overflow-hidden flex items-center justify-center p-4">
+        <div className="relative flex-1 bg-black/5 dark:bg-black/40 w-full h-full overflow-hidden flex items-center justify-center p-0 sm:p-2 md:p-4">
           {loading ? (
             <div className="flex flex-col items-center justify-center p-8 text-center space-y-3">
               <Loader2 className="size-8 animate-spin text-primary" />
@@ -203,7 +206,7 @@ export function PdfViewerModal({
             </div>
           ) : url ? (
             fileType === "image" ? (
-              <div className="flex items-center justify-center h-full w-full overflow-auto">
+              <div className="flex items-center justify-center h-full w-full overflow-auto p-2">
                 <img
                   src={url}
                   alt={resource.title}
@@ -214,13 +217,13 @@ export function PdfViewerModal({
               <iframe
                 src={`https://docs.google.com/gview?url=${encodeURIComponent(url)}&embedded=true`}
                 title={resource.title}
-                className="h-full w-full border-0 rounded"
+                className="h-full w-full border-0 rounded-none sm:rounded-lg shadow-xs"
               />
             ) : (
               <iframe
                 src={url}
                 title={resource.title}
-                className="h-full w-full border-0"
+                className="h-full w-full border-0 rounded-none sm:rounded-lg shadow-xs"
               />
             )
           ) : null}
