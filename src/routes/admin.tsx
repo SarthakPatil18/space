@@ -384,7 +384,13 @@ async function insertResourceSafely(
                     <button
                       key={c}
                       type="button"
-                      onClick={() => setSelectedCategory(c)}
+                      onClick={() => {
+                        setSelectedCategory(c);
+                        if (c !== "pyqs") {
+                          setExamType("");
+                          setYear("");
+                        }
+                      }}
                       className={`flex flex-col items-center justify-center p-2.5 rounded-lg border text-center transition-all ${
                         selectedCategory === c
                           ? "bg-primary text-primary-foreground border-transparent font-semibold shadow-xs"
@@ -409,71 +415,129 @@ async function insertResourceSafely(
                 <div className="space-y-3 rounded-xl border border-primary/20 bg-primary/5 p-4">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold uppercase tracking-wider text-primary">
-                      🎓 PYQ Exam Settings
+                      🎓 PYQ Exam Settings (Optional)
                     </span>
-                    <span className="text-[11px] text-mute">
-                      Auto-detects from filename if unselected
-                    </span>
+                    {(examType || year) ? (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setExamType("");
+                          setYear("");
+                        }}
+                        className="text-[11px] font-medium text-destructive hover:underline"
+                      >
+                        ✕ Clear / Reset Selection
+                      </button>
+                    ) : (
+                      <span className="text-[11px] text-mute">
+                        Auto-detects from filename if unselected
+                      </span>
+                    )}
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                       <label className="block text-xs font-semibold text-ink uppercase tracking-wider mb-1">
-                        Exam Type *
+                        Exam Type
                       </label>
-                      <div className="grid grid-cols-2 gap-1.5">
+                      <div className="grid grid-cols-3 gap-1">
+                        <button
+                          type="button"
+                          onClick={() => setExamType("")}
+                          className={`py-1.5 px-2 rounded-md text-[11px] font-semibold border transition-all ${
+                            !examType
+                              ? "bg-ink text-background border-transparent shadow-xs"
+                              : "bg-card border-hairline text-mute hover:text-ink hover:bg-hairline-soft"
+                          }`}
+                        >
+                          Auto / None
+                        </button>
                         <button
                           type="button"
                           onClick={() => setExamType(examType === "mse" ? "" : "mse")}
-                          className={`py-2 px-3 rounded-md text-xs font-semibold border transition-all ${
+                          className={`py-1.5 px-2 rounded-md text-[11px] font-semibold border transition-all ${
                             examType === "mse"
                               ? "bg-primary text-primary-foreground border-transparent shadow-xs"
                               : "bg-card border-hairline text-ink hover:bg-hairline-soft"
                           }`}
                         >
-                          Mid Sem (MSE)
+                          MSE
                         </button>
                         <button
                           type="button"
                           onClick={() => setExamType(examType === "ese" ? "" : "ese")}
-                          className={`py-2 px-3 rounded-md text-xs font-semibold border transition-all ${
+                          className={`py-1.5 px-2 rounded-md text-[11px] font-semibold border transition-all ${
                             examType === "ese"
                               ? "bg-primary text-primary-foreground border-transparent shadow-xs"
                               : "bg-card border-hairline text-ink hover:bg-hairline-soft"
                           }`}
                         >
-                          End Sem (ESE)
+                          ESE
                         </button>
                       </div>
                     </div>
 
                     <div>
-                      <label className="block text-xs font-semibold text-ink uppercase tracking-wider mb-1">
-                        Paper Year *
-                      </label>
-                      <input
-                        type="number"
-                        min="2010"
-                        max="2035"
-                        value={year}
-                        onChange={(e) => setYear(e.target.value)}
-                        placeholder="e.g. 2019, 2024"
-                        className="w-full rounded-md border border-hairline bg-card px-3 py-1.5 text-xs text-ink focus:outline-none focus:ring-2 focus:ring-primary font-medium"
-                      />
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="block text-xs font-semibold text-ink uppercase tracking-wider">
+                          Paper Year
+                        </label>
+                        {year ? (
+                          <button
+                            type="button"
+                            onClick={() => setYear("")}
+                            className="text-[10px] text-mute hover:text-destructive"
+                          >
+                            Clear
+                          </button>
+                        ) : null}
+                      </div>
+                      <div className="relative">
+                        <input
+                          type="number"
+                          min="2010"
+                          max="2035"
+                          value={year}
+                          onChange={(e) => setYear(e.target.value)}
+                          placeholder="Auto / e.g. 2019"
+                          className="w-full rounded-md border border-hairline bg-card px-3 py-1.5 text-xs text-ink focus:outline-none focus:ring-2 focus:ring-primary font-medium"
+                        />
+                        {year ? (
+                          <button
+                            type="button"
+                            onClick={() => setYear("")}
+                            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-mute hover:text-ink text-xs"
+                            aria-label="Clear year"
+                          >
+                            ✕
+                          </button>
+                        ) : null}
+                      </div>
                     </div>
                   </div>
 
-                  {/* Quick Year Selection Pills */}
+                  {/* Quick Year Selection Pills with Toggle-off and Auto pill */}
                   <div>
                     <span className="block text-[11px] font-medium text-mute mb-1.5">
-                      Quick select year (or auto-detect from filename):
+                      Quick select year (click active to deselect):
                     </span>
                     <div className="flex flex-wrap gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => setYear("")}
+                        className={`rounded px-2 py-0.5 text-xs font-medium transition-all ${
+                          !year
+                            ? "bg-ink text-background font-semibold shadow-xs"
+                            : "bg-card border border-hairline text-mute hover:text-ink hover:bg-hairline-soft"
+                        }`}
+                      >
+                        Auto / None
+                      </button>
                       {[2027, 2026, 2025, 2024, 2023, 2022, 2021, 2020, 2019, 2018, 2017].map((yr) => (
                         <button
                           key={yr}
                           type="button"
-                          onClick={() => setYear(yr.toString())}
+                          onClick={() => setYear(year === yr.toString() ? "" : yr.toString())}
                           className={`rounded px-2 py-0.5 text-xs font-medium transition-all ${
                             year === yr.toString()
                               ? "bg-primary text-primary-foreground font-semibold shadow-xs"
