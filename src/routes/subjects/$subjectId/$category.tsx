@@ -1,9 +1,20 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { Filter, Search, X } from "lucide-react";
+import {
+  Filter,
+  Search,
+  X,
+  LayoutGrid,
+  List,
+  Sparkles,
+  Layers,
+  FileCheck,
+} from "lucide-react";
 import { SiteFooter, SiteHeader } from "@/components/divhub/site-header";
-import { ResourceRow } from "@/components/divhub/resource-row";
+import { ResourceRow, type ResourceWithSubject } from "@/components/divhub/resource-row";
+import { ResourceCard } from "@/components/divhub/resource-card";
+import { ViewModeToggle } from "@/components/divhub/view-mode-toggle";
 import {
   Breadcrumbs,
   EmptyState,
@@ -50,6 +61,21 @@ function CategoryPage() {
   const [selectedYear, setSelectedYear] = useState<number | "all">("all");
   const [selectedExamTypeTab, setSelectedExamTypeTab] = useState<"all" | "mse" | "ese">("all");
 
+  const [viewMode, setViewMode] = useState<"grid" | "list">(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("divhub_view_mode");
+      if (saved === "grid" || saved === "list") return saved;
+    }
+    return "grid";
+  });
+
+  const handleViewModeChange = (mode: "grid" | "list") => {
+    setViewMode(mode);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("divhub_view_mode", mode);
+    }
+  };
+
   const valid = isCategory(category);
   const allResources = resources.data ?? [];
   const subjectColor = getSubjectColor(subject.data);
@@ -57,7 +83,7 @@ function CategoryPage() {
     ? allResources.filter((r) => r.category === category)
     : [];
 
-  // Extract all unique years available in PYQs for this subject (or default recent years if empty)
+  // Extract all unique years available in PYQs for this subject
   const availableYears = useMemo(() => {
     if (category !== "pyqs") return [];
     const years = new Set<number>();
@@ -95,10 +121,53 @@ function CategoryPage() {
     return true;
   });
 
+  function renderResourceList(items: ResourceWithSubject[]) {
+    if (viewMode === "grid") {
+      return (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 items-stretch">
+          {items.map((resource) => (
+            <ResourceCard
+              key={resource.id}
+              resource={resource}
+              showCategory={Boolean(query)}
+            />
+          ))}
+        </div>
+      );
+    }
+    return (
+      <div className="space-y-2.5">
+        {items.map((resource) => (
+          <ResourceRow
+            key={resource.id}
+            resource={resource}
+            showCategory={Boolean(query)}
+          />
+        ))}
+      </div>
+    );
+  }
+
+  function renderLoadingSkeletons() {
+    if (viewMode === "grid") {
+      return (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div
+              key={i}
+              className="hairline-card h-[190px] animate-pulse bg-hairline-soft rounded-xl"
+            />
+          ))}
+        </div>
+      );
+    }
+    return <SkeletonRows count={4} />;
+  }
+
   return (
     <div className="min-h-screen">
       <SiteHeader />
-      <main className="container-page py-10">
+      <main className="container-page py-8 sm:py-10">
         <Breadcrumbs
           items={[
             { label: "Home", to: "/" },
@@ -128,61 +197,81 @@ function CategoryPage() {
           />
         ) : (
           <>
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            {/* Header section with Subject Branding, Search, and View Toggle */}
+            <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
               <div>
-                {subject.data?.code ? (
-                  <span
-                    className="inline-block rounded px-2 py-0.5 text-xs font-semibold"
-                    style={{ backgroundColor: `${subjectColor}15`, color: subjectColor }}
-                  >
-                    {subject.data.code}
+                <div className="flex items-center gap-2">
+                  {subject.data?.code ? (
+                    <span
+                      className="inline-flex items-center rounded-md px-2.5 py-0.5 text-xs font-bold tracking-wider uppercase shadow-2xs"
+                      style={{ backgroundColor: `${subjectColor}18`, color: subjectColor }}
+                    >
+                      {subject.data.code}
+                    </span>
+                  ) : null}
+                  <span className="text-xs text-mute font-medium">
+                    {categoryResources.length} {CATEGORY_META[category].label.toLowerCase()} available
                   </span>
-                ) : null}
-                <h1 className="heading-lg mt-1">{subject.data?.name ?? "Subject"}</h1>
-                <p className="mt-1 text-[14px] text-mute">
+                </div>
+                <h1 className="heading-lg mt-1.5 text-ink tracking-tight">
+                  {subject.data?.name ?? "Subject"}
+                </h1>
+                <p className="mt-1 text-sm text-mute">
                   {CATEGORY_META[category].blurb}
                 </p>
               </div>
 
-              {/* In-Subject Search Bar */}
-              <div className="relative w-full sm:w-72 shrink-0">
-                <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-mute" />
-                <input
-                  type="text"
-                  placeholder={`Search in ${subject.data?.code ?? "subject"}...`}
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full rounded-full border border-hairline bg-card py-2 pl-9 pr-8 text-sm text-ink placeholder:text-mute focus:outline-none focus:ring-2 focus:ring-primary"
+              {/* Toolbar: Search + View Switcher */}
+              <div className="flex flex-wrap items-center gap-2 sm:gap-3 shrink-0">
+                {/* Search in Subject Input */}
+                <div className="relative flex-1 sm:w-64">
+                  <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-mute" />
+                  <input
+                    type="text"
+                    placeholder={`Search ${CATEGORY_META[category].label.toLowerCase()}...`}
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full rounded-full border border-hairline bg-card py-2 pl-9 pr-8 text-sm text-ink placeholder:text-mute focus:outline-none focus:ring-2 focus:ring-primary shadow-2xs"
+                  />
+                  {searchQuery ? (
+                    <button
+                      type="button"
+                      onClick={() => setSearchQuery("")}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-mute hover:text-ink transition-colors"
+                      aria-label="Clear search"
+                    >
+                      <X className="size-3.5" />
+                    </button>
+                  ) : null}
+                </div>
+
+                {/* View Mode Toggle: Grid vs List (Segmented Capsule) */}
+                <ViewModeToggle
+                  viewMode={viewMode}
+                  onChange={handleViewModeChange}
+                  color={subjectColor}
                 />
-                {searchQuery ? (
-                  <button
-                    type="button"
-                    onClick={() => setSearchQuery("")}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-mute hover:text-ink"
-                    aria-label="Clear search"
-                  >
-                    <X className="size-3.5" />
-                  </button>
-                ) : null}
               </div>
             </div>
 
-            {/* Category Navigation Pills */}
+            {/* Category Tabs Navigation */}
             <nav aria-label="Categories" className="mt-6 flex flex-wrap gap-2">
               {CATEGORIES.map((c) => {
                 const count = allResources.filter((r) => r.category === c).length;
+                const isCurrent = c === category;
                 return (
                   <Link
                     key={c}
                     to="/subjects/$subjectId/$category"
                     params={{ subjectId, category: c }}
-                    className="inline-flex items-center gap-1.5 rounded-full border px-4 py-1.5 text-sm font-medium transition-colors hover:opacity-90"
+                    className="inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-sm font-medium transition-all duration-150 hover:opacity-90"
                     style={
-                      c === category
+                      isCurrent
                         ? {
                             backgroundColor: subjectColor,
                             borderColor: "transparent",
                             color: "#ffffff",
+                            boxShadow: `0 2px 8px -2px ${subjectColor}60`,
                           }
                         : {
                             borderColor: "var(--border)",
@@ -192,7 +281,15 @@ function CategoryPage() {
                     }
                   >
                     <span>{CATEGORY_META[c].label}</span>
-                    <span className="text-xs opacity-75">({count})</span>
+                    <span
+                      className="rounded-full px-1.5 py-0.2 text-[11px] font-semibold"
+                      style={{
+                        backgroundColor: isCurrent ? "rgba(255,255,255,0.25)" : "var(--muted)",
+                        color: isCurrent ? "#ffffff" : "var(--mute)",
+                      }}
+                    >
+                      {count}
+                    </span>
                   </Link>
                 );
               })}
@@ -200,13 +297,13 @@ function CategoryPage() {
 
             {/* PYQ Year and Exam Filter Bar (Always visible on PYQ tab) */}
             {category === "pyqs" ? (
-              <div className="mt-6 rounded-xl border border-hairline bg-card/60 p-3.5 backdrop-blur-sm space-y-3">
+              <div className="mt-6 rounded-2xl border border-hairline bg-card/70 p-4 backdrop-blur-md space-y-3.5 shadow-2xs">
                 <div className="flex flex-wrap items-center justify-between gap-3">
-                  {/* Year Filter Pills */}
+                  {/* Year Filter Chips */}
                   <div className="flex flex-wrap items-center gap-1.5">
                     <span className="text-xs font-semibold text-mute uppercase tracking-wider mr-1 flex items-center gap-1">
                       <Filter className="size-3" />
-                      Filter Year:
+                      Year:
                     </span>
                     <button
                       type="button"
@@ -251,7 +348,7 @@ function CategoryPage() {
                           : "text-mute hover:text-ink"
                       }`}
                     >
-                      All
+                      All Exams
                     </button>
                     <button
                       type="button"
@@ -280,9 +377,11 @@ function CategoryPage() {
 
                 {/* Active filter summary tag if filter applied */}
                 {selectedYear !== "all" || selectedExamTypeTab !== "all" ? (
-                  <div className="flex items-center justify-between text-xs text-mute pt-1 border-t border-hairline">
-                    <span>
-                      Showing {filteredList.length} paper{filteredList.length === 1 ? "" : "s"} for{" "}
+                  <div className="flex items-center justify-between text-xs text-mute pt-2 border-t border-hairline">
+                    <span className="flex items-center gap-1.5">
+                      <FileCheck className="size-3.5 text-primary" />
+                      Showing <strong className="text-ink font-semibold">{filteredList.length}</strong> paper
+                      {filteredList.length === 1 ? "" : "s"} for{" "}
                       <strong className="text-ink">
                         {selectedYear !== "all" ? `Year ${selectedYear} ` : "All Years "}
                         {selectedExamTypeTab !== "all" ? selectedExamTypeTab.toUpperCase() : "Exams"}
@@ -294,7 +393,7 @@ function CategoryPage() {
                         setSelectedYear("all");
                         setSelectedExamTypeTab("all");
                       }}
-                      className="text-primary hover:underline font-medium"
+                      className="text-primary hover:underline font-semibold"
                     >
                       Reset filters
                     </button>
@@ -303,10 +402,10 @@ function CategoryPage() {
               </div>
             ) : null}
 
-            {/* Resources List */}
-            <div className="mt-6 space-y-6">
+            {/* Resources Content Area (Box vs Line View) */}
+            <div className="mt-8">
               {resources.isPending ? (
-                <SkeletonRows count={4} />
+                renderLoadingSkeletons()
               ) : resources.isError ? (
                 <ErrorState onRetry={() => void resources.refetch()} />
               ) : category === "pyqs" ? (
@@ -349,82 +448,72 @@ function CategoryPage() {
                   }
 
                   return (
-                    <div className="space-y-8">
+                    <div className="space-y-10">
                       {/* Mid Semester Examination (MSE) Section */}
                       {(selectedExamTypeTab === "all" || selectedExamTypeTab === "mse") && (
-                        <div className="space-y-3">
-                          <div className="flex items-center justify-between border-b border-hairline pb-2">
-                            <div className="flex items-center gap-2">
+                        <section className="space-y-3.5">
+                          <div className="flex items-center justify-between border-b border-hairline pb-2.5">
+                            <div className="flex items-center gap-2.5">
                               <span
-                                className="size-2.5 rounded-full"
-                                style={{ backgroundColor: subjectColor }}
+                                className="size-2.5 rounded-full ring-4"
+                                style={{
+                                  backgroundColor: subjectColor,
+                                  boxShadow: `0 0 0 3px ${subjectColor}25`,
+                                }}
                               />
                               <h2 className="text-base font-semibold text-ink">
                                 Mid Semester Examinations (MSE)
                               </h2>
                             </div>
-                            <span className="text-xs text-mute font-medium">
+                            <span className="rounded-full bg-hairline px-2.5 py-0.5 text-xs font-semibold text-mute">
                               {msePapers.length} paper{msePapers.length === 1 ? "" : "s"}
                             </span>
                           </div>
                           {msePapers.length > 0 ? (
-                            <div className="space-y-2">
-                              {msePapers.map((resource) => (
-                                <ResourceRow
-                                  key={resource.id}
-                                  resource={resource}
-                                  showCategory={Boolean(query)}
-                                />
-                              ))}
-                            </div>
+                            renderResourceList(msePapers)
                           ) : (
-                            <div className="rounded-lg border border-dashed border-hairline p-4 text-center text-xs text-mute">
+                            <div className="rounded-xl border border-dashed border-hairline p-6 text-center text-xs text-mute bg-card/30">
                               No MSE question papers uploaded yet{selectedYear !== "all" ? ` for ${selectedYear}` : ""}.
                             </div>
                           )}
-                        </div>
+                        </section>
                       )}
 
                       {/* End Semester Examination (ESE) Section */}
                       {(selectedExamTypeTab === "all" || selectedExamTypeTab === "ese") && (
-                        <div className="space-y-3">
-                          <div className="flex items-center justify-between border-b border-hairline pb-2">
-                            <div className="flex items-center gap-2">
+                        <section className="space-y-3.5">
+                          <div className="flex items-center justify-between border-b border-hairline pb-2.5">
+                            <div className="flex items-center gap-2.5">
                               <span
-                                className="size-2.5 rounded-full"
-                                style={{ backgroundColor: subjectColor }}
+                                className="size-2.5 rounded-full ring-4"
+                                style={{
+                                  backgroundColor: subjectColor,
+                                  boxShadow: `0 0 0 3px ${subjectColor}25`,
+                                }}
                               />
                               <h2 className="text-base font-semibold text-ink">
                                 End Semester Examinations (ESE)
                               </h2>
                             </div>
-                            <span className="text-xs text-mute font-medium">
+                            <span className="rounded-full bg-hairline px-2.5 py-0.5 text-xs font-semibold text-mute">
                               {esePapers.length} paper{esePapers.length === 1 ? "" : "s"}
                             </span>
                           </div>
                           {esePapers.length > 0 ? (
-                            <div className="space-y-2">
-                              {esePapers.map((resource) => (
-                                <ResourceRow
-                                  key={resource.id}
-                                  resource={resource}
-                                  showCategory={Boolean(query)}
-                                />
-                              ))}
-                            </div>
+                            renderResourceList(esePapers)
                           ) : (
-                            <div className="rounded-lg border border-dashed border-hairline p-4 text-center text-xs text-mute">
+                            <div className="rounded-xl border border-dashed border-hairline p-6 text-center text-xs text-mute bg-card/30">
                               No ESE question papers uploaded yet{selectedYear !== "all" ? ` for ${selectedYear}` : ""}.
                             </div>
                           )}
-                        </div>
+                        </section>
                       )}
 
                       {/* Other Question Papers (if any) */}
                       {otherPapers.length > 0 && selectedExamTypeTab === "all" && (
-                        <div className="space-y-3">
-                          <div className="flex items-center justify-between border-b border-hairline pb-2">
-                            <div className="flex items-center gap-2">
+                        <section className="space-y-3.5">
+                          <div className="flex items-center justify-between border-b border-hairline pb-2.5">
+                            <div className="flex items-center gap-2.5">
                               <span
                                 className="size-2.5 rounded-full"
                                 style={{ backgroundColor: "var(--mute)" }}
@@ -433,20 +522,12 @@ function CategoryPage() {
                                 Other Question Papers
                               </h2>
                             </div>
-                            <span className="text-xs text-mute font-medium">
+                            <span className="rounded-full bg-hairline px-2.5 py-0.5 text-xs font-semibold text-mute">
                               {otherPapers.length} paper{otherPapers.length === 1 ? "" : "s"}
                             </span>
                           </div>
-                          <div className="space-y-2">
-                            {otherPapers.map((resource) => (
-                              <ResourceRow
-                                key={resource.id}
-                                resource={resource}
-                                showCategory={Boolean(query)}
-                              />
-                            ))}
-                          </div>
-                        </div>
+                          {renderResourceList(otherPapers)}
+                        </section>
                       )}
                     </div>
                   );
@@ -465,13 +546,7 @@ function CategoryPage() {
                   }
                 />
               ) : (
-                list.map((resource) => (
-                  <ResourceRow
-                    key={resource.id}
-                    resource={resource}
-                    showCategory={Boolean(query)}
-                  />
-                ))
+                renderResourceList(list)
               )}
             </div>
           </>

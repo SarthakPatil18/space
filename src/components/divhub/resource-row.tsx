@@ -71,7 +71,11 @@ export function ResourceRow({
         <FileIcon type={resource.file_type} color={subjectColor} />
 
         <div className="min-w-0 flex-1">
-          <h3 className="truncate text-[15px] font-medium text-ink">
+          <h3
+            onClick={() => setActiveModalResource(resource)}
+            className="truncate text-[15px] font-medium text-ink hover:text-primary cursor-pointer transition-colors"
+            title={resource.title}
+          >
             {resource.title}
           </h3>
           <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] text-mute">

@@ -1,11 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import { SiteFooter, SiteHeader } from "@/components/divhub/site-header";
 import { SearchBox } from "@/components/divhub/search-box";
 import {
   ResourceRow,
   type ResourceWithSubject,
 } from "@/components/divhub/resource-row";
+import { ResourceCard } from "@/components/divhub/resource-card";
+import { ViewModeToggle } from "@/components/divhub/view-mode-toggle";
 import {
   Breadcrumbs,
   EmptyState,
@@ -45,6 +48,21 @@ function SearchPage() {
   const { q } = Route.useSearch();
   const term = q ?? "";
   const results = useQuery(searchQuery(term));
+
+  const [viewMode, setViewMode] = useState<"grid" | "list">(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("divhub_view_mode");
+      if (saved === "grid" || saved === "list") return saved;
+    }
+    return "grid";
+  });
+
+  const handleViewModeChange = (mode: "grid" | "list") => {
+    setViewMode(mode);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("divhub_view_mode", mode);
+    }
+  };
 
   return (
     <div className="min-h-screen">
@@ -103,19 +121,43 @@ function SearchPage() {
 
               {results.data.resources.length > 0 ? (
                 <section aria-labelledby="resource-results">
-                  <h2 id="resource-results" className="heading-md">
-                    {results.data.resources.length} resource
-                    {results.data.resources.length === 1 ? "" : "s"}
-                  </h2>
-                  <div className="mt-4 space-y-2">
-                    {results.data.resources.map((resource) => (
-                      <ResourceRow
-                        key={resource.id}
-                        resource={resource as ResourceWithSubject}
-                        showSubject
-                        showCategory
-                      />
-                    ))}
+                  <div className="flex items-center justify-between gap-4">
+                    <h2 id="resource-results" className="heading-md">
+                      {results.data.resources.length} resource
+                      {results.data.resources.length === 1 ? "" : "s"}
+                    </h2>
+
+                    {/* View Mode Toggle */}
+                    <ViewModeToggle
+                      viewMode={viewMode}
+                      onChange={handleViewModeChange}
+                    />
+                  </div>
+
+                  <div className="mt-4">
+                    {viewMode === "grid" ? (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 items-stretch">
+                        {results.data.resources.map((resource) => (
+                          <ResourceCard
+                            key={resource.id}
+                            resource={resource as ResourceWithSubject}
+                            showSubject
+                            showCategory
+                          />
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="space-y-2.5">
+                        {results.data.resources.map((resource) => (
+                          <ResourceRow
+                            key={resource.id}
+                            resource={resource as ResourceWithSubject}
+                            showSubject
+                            showCategory
+                          />
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </section>
               ) : null}

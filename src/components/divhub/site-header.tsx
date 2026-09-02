@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { ThemeToggle } from "./theme-toggle";
+import { Logo } from "./logo";
 
 const navLinks = [
   { to: "/", label: "Home" },
@@ -13,18 +14,9 @@ export function SiteHeader() {
       <div className="container-page flex h-16 items-center justify-between gap-4">
         <Link
           to="/"
-          className="flex items-center gap-2 rounded-sm py-1"
+          className="flex items-center gap-2 rounded-sm py-1 transition-opacity hover:opacity-85"
         >
-          <img
-            src="/logo-light.png"
-            alt="SPACE MITAOE"
-            className="h-10 sm:h-11 w-auto object-contain dark:hidden transition-all"
-          />
-          <img
-            src="/logo-dark.png"
-            alt="SPACE MITAOE"
-            className="h-10 sm:h-11 w-auto object-contain hidden dark:block transition-all"
-          />
+          <Logo className="h-10 sm:h-11 w-auto text-ink" />
         </Link>
 
         <nav aria-label="Main" className="flex items-center gap-1 sm:gap-2">
@@ -54,20 +46,12 @@ export function SiteFooter() {
   return (
     <footer className="mt-24 border-t border-hairline">
       <div className="container-page flex flex-col gap-2 py-10 text-[13px] text-mute">
-        <Link to="/" className="w-fit">
-          <img
-            src="/logo-light.png"
-            alt="SPACE MITAOE"
-            className="h-8 w-auto object-contain dark:hidden transition-all"
-          />
-          <img
-            src="/logo-dark.png"
-            alt="SPACE MITAOE"
-            className="h-8 w-auto object-contain hidden dark:block transition-all"
-          />
+        <Link to="/" className="w-fit transition-opacity hover:opacity-85">
+          <Logo className="h-8 w-auto text-ink" />
         </Link>
         <p>Every note. Every PYQ. Every file. One place.</p>
       </div>
     </footer>
   );
 }
+
