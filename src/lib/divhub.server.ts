@@ -1,22 +1,76 @@
 import { createServerFn } from "@tanstack/react-start";
 import { createClient } from "@supabase/supabase-js";
 import crypto from "node:crypto";
+import fs from "node:fs";
+import path from "node:path";
 import type { Category } from "./divhub";
+
+let cachedEnv: Record<string, string> | null = null;
+
+function getEnvValue(name: string): string | undefined {
+  if (process.env[name]) return process.env[name];
+  if (!cachedEnv && typeof window === "undefined") {
+    try {
+      const envPath = path.resolve(process.cwd(), ".env");
+      if (fs.existsSync(envPath)) {
+        cachedEnv = {};
+        const content = fs.readFileSync(envPath, "utf-8");
+        for (const line of content.split("\n")) {
+          const match = line.match(/^\s*([\w_]+)\s*=\s*(?:["']?)(.*?)(?:["']?)\s*$/);
+          if (match && match[1] && match[2]) {
+            cachedEnv[match[1]] = match[2];
+            if (!process.env[match[1]]) {
+              process.env[match[1]] = match[2];
+            }
+          }
+        }
+      }
+    } catch {}
+  }
+  return cachedEnv?.[name];
+}
+
+function isNewSupabaseApiKey(value: string): boolean {
+  return value.startsWith("sb_publishable_") || value.startsWith("sb_secret_");
+}
+
+function createSupabaseFetch(supabaseKey: string): typeof fetch {
+  return (input, init) => {
+    const headers = new Headers(
+      typeof Request !== "undefined" && input instanceof Request ? input.headers : undefined,
+    );
+
+    if (init?.headers) {
+      new Headers(init.headers).forEach((value, key) => headers.set(key, value));
+    }
+
+    if (isNewSupabaseApiKey(supabaseKey) && headers.get("Authorization") === `Bearer ${supabaseKey}`) {
+      headers.delete("Authorization");
+    }
+
+    headers.set("apikey", supabaseKey);
+    return fetch(input, { ...init, headers });
+  };
+}
 
 const getAdminClient = () => {
   const url =
-    process.env.SUPABASE_URL ||
-    process.env.VITE_SUPABASE_URL ||
+    getEnvValue("SUPABASE_URL") ||
+    getEnvValue("VITE_SUPABASE_URL") ||
     "https://jykszzfxpqmjsnepqwhd.supabase.co";
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const key = getEnvValue("SUPABASE_SERVICE_ROLE_KEY");
   if (!key) {
     throw new Error("Server configuration error: SUPABASE_SERVICE_ROLE_KEY is missing");
   }
-  return createClient(url, key);
+  return createClient(url, key, {
+    global: {
+      fetch: createSupabaseFetch(key),
+    },
+  });
 };
 
 function getAdminSecret(): string {
-  return process.env.ADMIN_SECRET || "mitaoe@admin2026";
+  return getEnvValue("ADMIN_SECRET") || "mitaoe@admin2026";
 }
 
 function createAdminToken(): string {
