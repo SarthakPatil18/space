@@ -374,23 +374,119 @@ async function insertResourceSafely(
                 )}
               </div>
 
+              {/* Prominent Category / Material Type Visual Picker */}
               <div>
                 <label className="block text-sm font-medium text-ink mb-1.5">
-                  Category / Type *
+                  Category / Material Type *
                 </label>
-                <select
-                  value={selectedCategory}
-                  onChange={(e) => setSelectedCategory(e.target.value as Category)}
-                  required
-                  className="w-full rounded-md border border-hairline bg-background px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-primary"
-                >
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   {CATEGORIES.map((c) => (
-                    <option key={c} value={c}>
-                      {CATEGORY_META[c].label} — {CATEGORY_META[c].blurb}
-                    </option>
+                    <button
+                      key={c}
+                      type="button"
+                      onClick={() => setSelectedCategory(c)}
+                      className={`flex flex-col items-center justify-center p-2.5 rounded-lg border text-center transition-all ${
+                        selectedCategory === c
+                          ? "bg-primary text-primary-foreground border-transparent font-semibold shadow-xs"
+                          : "bg-card border-hairline text-ink hover:bg-hairline-soft"
+                      }`}
+                    >
+                      <span className="text-xs font-semibold">{CATEGORY_META[c].label}</span>
+                      <span
+                        className={`text-[10px] mt-0.5 line-clamp-1 ${
+                          selectedCategory === c ? "text-primary-foreground/80" : "text-mute"
+                        }`}
+                      >
+                        {c === "pyqs" ? "MSE & ESE Papers" : CATEGORY_META[c].blurb}
+                      </span>
+                    </button>
                   ))}
-                </select>
+                </div>
               </div>
+
+              {/* Prominent PYQ Settings (MSE / ESE & Year) for BOTH Single and Bulk Modes */}
+              {selectedCategory === "pyqs" && (
+                <div className="space-y-3 rounded-xl border border-primary/20 bg-primary/5 p-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold uppercase tracking-wider text-primary">
+                      🎓 PYQ Exam Settings
+                    </span>
+                    <span className="text-[11px] text-mute">
+                      Auto-detects from filename if unselected
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-semibold text-ink uppercase tracking-wider mb-1">
+                        Exam Type *
+                      </label>
+                      <div className="grid grid-cols-2 gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => setExamType(examType === "mse" ? "" : "mse")}
+                          className={`py-2 px-3 rounded-md text-xs font-semibold border transition-all ${
+                            examType === "mse"
+                              ? "bg-primary text-primary-foreground border-transparent shadow-xs"
+                              : "bg-card border-hairline text-ink hover:bg-hairline-soft"
+                          }`}
+                        >
+                          Mid Sem (MSE)
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setExamType(examType === "ese" ? "" : "ese")}
+                          className={`py-2 px-3 rounded-md text-xs font-semibold border transition-all ${
+                            examType === "ese"
+                              ? "bg-primary text-primary-foreground border-transparent shadow-xs"
+                              : "bg-card border-hairline text-ink hover:bg-hairline-soft"
+                          }`}
+                        >
+                          End Sem (ESE)
+                        </button>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-ink uppercase tracking-wider mb-1">
+                        Paper Year *
+                      </label>
+                      <input
+                        type="number"
+                        min="2010"
+                        max="2035"
+                        value={year}
+                        onChange={(e) => setYear(e.target.value)}
+                        placeholder="e.g. 2019, 2024"
+                        className="w-full rounded-md border border-hairline bg-card px-3 py-1.5 text-xs text-ink focus:outline-none focus:ring-2 focus:ring-primary font-medium"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Quick Year Selection Pills */}
+                  <div>
+                    <span className="block text-[11px] font-medium text-mute mb-1.5">
+                      Quick select year (or auto-detect from filename):
+                    </span>
+                    <div className="flex flex-wrap gap-1.5">
+                      {[2027, 2026, 2025, 2024, 2023, 2022, 2021, 2020, 2019, 2018, 2017].map((yr) => (
+                        <button
+                          key={yr}
+                          type="button"
+                          onClick={() => setYear(yr.toString())}
+                          className={`rounded px-2 py-0.5 text-xs font-medium transition-all ${
+                            year === yr.toString()
+                              ? "bg-primary text-primary-foreground font-semibold shadow-xs"
+                              : "bg-card border border-hairline text-mute hover:text-ink hover:bg-hairline-soft"
+                          }`}
+                        >
+                          {yr}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Bulk Mode Form */}
               {uploadMode === "bulk" ? (
@@ -426,8 +522,8 @@ async function insertResourceSafely(
                       </div>
                       <div className="max-h-48 overflow-y-auto space-y-1.5 pr-1">
                         {bulkFiles.map((f, index) => {
-                          const detectedType = getExamType({ title: f.name });
-                          const detectedYear = getExamYear({ title: f.name });
+                          const detectedType = examType || getExamType({ title: f.name });
+                          const detectedYear = (year && year !== new Date().getFullYear().toString() ? year : null) || getExamYear({ title: f.name }) || year;
                           return (
                             <div
                               key={index}
@@ -523,65 +619,6 @@ async function insertResourceSafely(
                       className="w-full rounded-md border border-hairline bg-background px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-primary"
                     />
                   </div>
-
-                  {selectedCategory === "pyqs" && (
-                    <div className="space-y-3 rounded-lg border border-hairline p-3 bg-background/50">
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <label className="block text-xs font-semibold text-ink uppercase tracking-wider mb-1">
-                            Exam Type *
-                          </label>
-                          <select
-                            value={examType}
-                            onChange={(e) => setExamType(e.target.value as "mse" | "ese" | "")}
-                            required
-                            className="w-full rounded-md border border-hairline bg-background px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-primary"
-                          >
-                            <option value="">Select exam type...</option>
-                            <option value="mse">Mid Semester Exam (MSE)</option>
-                            <option value="ese">End Semester Exam (ESE)</option>
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-xs font-semibold text-ink uppercase tracking-wider mb-1">
-                            Exam Year *
-                          </label>
-                          <input
-                            type="number"
-                            min="2010"
-                            max="2035"
-                            value={year}
-                            onChange={(e) => setYear(e.target.value)}
-                            required
-                            className="w-full rounded-md border border-hairline bg-background px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-primary"
-                          />
-                        </div>
-                      </div>
-
-                      {/* Quick Year Selection Pills */}
-                      <div>
-                        <span className="block text-[11px] font-medium text-mute mb-1.5">
-                          Quick select year:
-                        </span>
-                        <div className="flex flex-wrap gap-1.5">
-                          {[2027, 2026, 2025, 2024, 2023, 2022, 2021, 2020, 2019, 2018, 2017].map((yr) => (
-                            <button
-                              key={yr}
-                              type="button"
-                              onClick={() => setYear(yr.toString())}
-                              className={`rounded px-2 py-0.5 text-xs font-medium transition-all ${
-                                year === yr.toString()
-                                  ? "bg-primary text-primary-foreground font-semibold shadow-xs"
-                                  : "bg-card border border-hairline text-mute hover:text-ink hover:bg-hairline-soft"
-                              }`}
-                            >
-                              {yr}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  )}
 
                   <div>
                     <label className="block text-sm font-medium text-ink mb-1.5">

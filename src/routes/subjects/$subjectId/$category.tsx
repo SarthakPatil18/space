@@ -57,7 +57,7 @@ function CategoryPage() {
     ? allResources.filter((r) => r.category === category)
     : [];
 
-  // Extract all unique years available in PYQs for this subject
+  // Extract all unique years available in PYQs for this subject (or default recent years)
   const availableYears = useMemo(() => {
     if (category !== "pyqs") return [];
     const years = new Set<number>();
@@ -65,6 +65,8 @@ function CategoryPage() {
       const y = getExamYear(r);
       if (y) years.add(y);
     }
+    // Include standard academic years if list is sparse
+    [2027, 2026, 2025, 2024, 2023, 2022, 2021, 2020, 2019, 2018, 2017].forEach((y) => years.add(y));
     return Array.from(years).sort((a, b) => b - a);
   }, [category, categoryResources]);
 
@@ -195,15 +197,15 @@ function CategoryPage() {
               })}
             </nav>
 
-            {/* PYQ Year and Exam Filter Bar */}
-            {category === "pyqs" && availableYears.length > 0 ? (
+            {/* PYQ Year and Exam Filter Bar (Always visible on PYQ tab) */}
+            {category === "pyqs" ? (
               <div className="mt-6 rounded-xl border border-hairline bg-card/60 p-3.5 backdrop-blur-sm space-y-3">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   {/* Year Filter Pills */}
                   <div className="flex flex-wrap items-center gap-1.5">
                     <span className="text-xs font-semibold text-mute uppercase tracking-wider mr-1 flex items-center gap-1">
                       <Filter className="size-3" />
-                      Year:
+                      Filter Year:
                     </span>
                     <button
                       type="button"
@@ -242,7 +244,7 @@ function CategoryPage() {
                     <button
                       type="button"
                       onClick={() => setSelectedExamTypeTab("all")}
-                      className={`px-2.5 py-1 rounded-md transition-colors ${
+                      className={`px-3 py-1 rounded-md transition-colors ${
                         selectedExamTypeTab === "all"
                           ? "bg-card text-ink font-semibold shadow-xs"
                           : "text-mute hover:text-ink"
@@ -253,24 +255,24 @@ function CategoryPage() {
                     <button
                       type="button"
                       onClick={() => setSelectedExamTypeTab("mse")}
-                      className={`px-2.5 py-1 rounded-md transition-colors ${
+                      className={`px-3 py-1 rounded-md transition-colors ${
                         selectedExamTypeTab === "mse"
                           ? "bg-card text-ink font-semibold shadow-xs"
                           : "text-mute hover:text-ink"
                       }`}
                     >
-                      MSE
+                      MSE (Mid Sem)
                     </button>
                     <button
                       type="button"
                       onClick={() => setSelectedExamTypeTab("ese")}
-                      className={`px-2.5 py-1 rounded-md transition-colors ${
+                      className={`px-3 py-1 rounded-md transition-colors ${
                         selectedExamTypeTab === "ese"
                           ? "bg-card text-ink font-semibold shadow-xs"
                           : "text-mute hover:text-ink"
                       }`}
                     >
-                      ESE
+                      ESE (End Sem)
                     </button>
                   </div>
                 </div>
@@ -281,7 +283,7 @@ function CategoryPage() {
                     <span>
                       Showing {filteredList.length} paper{filteredList.length === 1 ? "" : "s"} for{" "}
                       <strong className="text-ink">
-                        {selectedYear !== "all" ? `${selectedYear} ` : "All Years "}
+                        {selectedYear !== "all" ? `Year ${selectedYear} ` : "All Years "}
                         {selectedExamTypeTab !== "all" ? selectedExamTypeTab.toUpperCase() : "Exams"}
                       </strong>
                     </span>
@@ -293,7 +295,7 @@ function CategoryPage() {
                       }}
                       className="text-primary hover:underline font-medium"
                     >
-                      Clear filters
+                      Reset filters
                     </button>
                   </div>
                 ) : null}
@@ -306,36 +308,6 @@ function CategoryPage() {
                 <SkeletonRows count={4} />
               ) : resources.isError ? (
                 <ErrorState onRetry={() => void resources.refetch()} />
-              ) : filteredList.length === 0 ? (
-                <EmptyState
-                  title={
-                    searchQuery
-                      ? `No ${CATEGORY_META[category].label.toLowerCase()} matching "${searchQuery}"`
-                      : selectedYear !== "all" || selectedExamTypeTab !== "all"
-                        ? "No question papers found for selected filter"
-                        : `No ${CATEGORY_META[category].label.toLowerCase()} uploaded yet`
-                  }
-                  description={
-                    searchQuery || selectedYear !== "all" || selectedExamTypeTab !== "all"
-                      ? "Try choosing a different year or clearing your filters."
-                      : "Check back later — this section will fill up as material is added."
-                  }
-                  action={
-                    selectedYear !== "all" || selectedExamTypeTab !== "all" ? (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setSelectedYear("all");
-                          setSelectedExamTypeTab("all");
-                          setSearchQuery("");
-                        }}
-                        className="btn-primary-sm"
-                      >
-                        Show all question papers
-                      </button>
-                    ) : undefined
-                  }
-                />
               ) : category === "pyqs" ? (
                 // Group PYQ resources by ESE/MSE/Other with smart title detection
                 (() => {
@@ -351,67 +323,118 @@ function CategoryPage() {
                     .filter((r) => getExamType(r) !== "mse" && getExamType(r) !== "ese")
                     .sort((a, b) => (getExamYear(b) ?? 0) - (getExamYear(a) ?? 0));
 
+                  const hasAnyPapers = msePapers.length > 0 || esePapers.length > 0 || otherPapers.length > 0;
+
+                  if (!hasAnyPapers && (searchQuery || selectedYear !== "all" || selectedExamTypeTab !== "all")) {
+                    return (
+                      <EmptyState
+                        title="No question papers found for selected filter"
+                        description="Try choosing a different year or clearing your filters."
+                        action={
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedYear("all");
+                              setSelectedExamTypeTab("all");
+                              setSearchQuery("");
+                            }}
+                            className="btn-primary-sm"
+                          >
+                            Reset filters
+                          </button>
+                        }
+                      />
+                    );
+                  }
+
                   return (
                     <div className="space-y-8">
-                      {msePapers.length > 0 && (selectedExamTypeTab === "all" || selectedExamTypeTab === "mse") && (
+                      {/* Mid Semester Examination (MSE) Section */}
+                      {(selectedExamTypeTab === "all" || selectedExamTypeTab === "mse") && (
                         <div className="space-y-3">
-                          <div className="flex items-center gap-2 border-b border-hairline pb-2">
-                            <span
-                              className="size-2.5 rounded-full"
-                              style={{ backgroundColor: subjectColor }}
-                            />
-                            <h2 className="text-base font-semibold text-ink">
-                              Mid Semester Examinations (MSE)
-                            </h2>
-                            <span className="text-xs text-mute font-medium">({msePapers.length})</span>
-                          </div>
-                          <div className="space-y-2">
-                            {msePapers.map((resource) => (
-                              <ResourceRow
-                                key={resource.id}
-                                resource={resource}
-                                showCategory={Boolean(query)}
+                          <div className="flex items-center justify-between border-b border-hairline pb-2">
+                            <div className="flex items-center gap-2">
+                              <span
+                                className="size-2.5 rounded-full"
+                                style={{ backgroundColor: subjectColor }}
                               />
-                            ))}
+                              <h2 className="text-base font-semibold text-ink">
+                                Mid Semester Examinations (MSE)
+                              </h2>
+                            </div>
+                            <span className="text-xs text-mute font-medium">
+                              {msePapers.length} paper{msePapers.length === 1 ? "" : "s"}
+                            </span>
                           </div>
+                          {msePapers.length > 0 ? (
+                            <div className="space-y-2">
+                              {msePapers.map((resource) => (
+                                <ResourceRow
+                                  key={resource.id}
+                                  resource={resource}
+                                  showCategory={Boolean(query)}
+                                />
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="rounded-lg border border-dashed border-hairline p-4 text-center text-xs text-mute">
+                              No MSE question papers uploaded yet{selectedYear !== "all" ? ` for ${selectedYear}` : ""}.
+                            </div>
+                          )}
                         </div>
                       )}
 
-                      {esePapers.length > 0 && (selectedExamTypeTab === "all" || selectedExamTypeTab === "ese") && (
+                      {/* End Semester Examination (ESE) Section */}
+                      {(selectedExamTypeTab === "all" || selectedExamTypeTab === "ese") && (
                         <div className="space-y-3">
-                          <div className="flex items-center gap-2 border-b border-hairline pb-2">
-                            <span
-                              className="size-2.5 rounded-full"
-                              style={{ backgroundColor: subjectColor }}
-                            />
-                            <h2 className="text-base font-semibold text-ink">
-                              End Semester Examinations (ESE)
-                            </h2>
-                            <span className="text-xs text-mute font-medium">({esePapers.length})</span>
-                          </div>
-                          <div className="space-y-2">
-                            {esePapers.map((resource) => (
-                              <ResourceRow
-                                key={resource.id}
-                                resource={resource}
-                                showCategory={Boolean(query)}
+                          <div className="flex items-center justify-between border-b border-hairline pb-2">
+                            <div className="flex items-center gap-2">
+                              <span
+                                className="size-2.5 rounded-full"
+                                style={{ backgroundColor: subjectColor }}
                               />
-                            ))}
+                              <h2 className="text-base font-semibold text-ink">
+                                End Semester Examinations (ESE)
+                              </h2>
+                            </div>
+                            <span className="text-xs text-mute font-medium">
+                              {esePapers.length} paper{esePapers.length === 1 ? "" : "s"}
+                            </span>
                           </div>
+                          {esePapers.length > 0 ? (
+                            <div className="space-y-2">
+                              {esePapers.map((resource) => (
+                                <ResourceRow
+                                  key={resource.id}
+                                  resource={resource}
+                                  showCategory={Boolean(query)}
+                                />
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="rounded-lg border border-dashed border-hairline p-4 text-center text-xs text-mute">
+                              No ESE question papers uploaded yet{selectedYear !== "all" ? ` for ${selectedYear}` : ""}.
+                            </div>
+                          )}
                         </div>
                       )}
 
+                      {/* Other Question Papers (if any) */}
                       {otherPapers.length > 0 && selectedExamTypeTab === "all" && (
                         <div className="space-y-3">
-                          <div className="flex items-center gap-2 border-b border-hairline pb-2">
-                            <span
-                              className="size-2.5 rounded-full"
-                              style={{ backgroundColor: "var(--mute)" }}
-                            />
-                            <h2 className="text-base font-semibold text-ink">
-                              Other Question Papers
-                            </h2>
-                            <span className="text-xs text-mute font-medium">({otherPapers.length})</span>
+                          <div className="flex items-center justify-between border-b border-hairline pb-2">
+                            <div className="flex items-center gap-2">
+                              <span
+                                className="size-2.5 rounded-full"
+                                style={{ backgroundColor: "var(--mute)" }}
+                              />
+                              <h2 className="text-base font-semibold text-ink">
+                                Other Question Papers
+                              </h2>
+                            </div>
+                            <span className="text-xs text-mute font-medium">
+                              {otherPapers.length} paper{otherPapers.length === 1 ? "" : "s"}
+                            </span>
                           </div>
                           <div className="space-y-2">
                             {otherPapers.map((resource) => (
@@ -424,16 +447,22 @@ function CategoryPage() {
                           </div>
                         </div>
                       )}
-
-                      {msePapers.length === 0 && esePapers.length === 0 && otherPapers.length === 0 && (
-                        <EmptyState
-                          title="No question papers matching filters"
-                          description="Try clearing your search query or filters."
-                        />
-                      )}
                     </div>
                   );
                 })()
+              ) : filteredList.length === 0 ? (
+                <EmptyState
+                  title={
+                    searchQuery
+                      ? `No ${CATEGORY_META[category].label.toLowerCase()} matching "${searchQuery}"`
+                      : `No ${CATEGORY_META[category].label.toLowerCase()} uploaded yet`
+                  }
+                  description={
+                    searchQuery
+                      ? "Try searching for a different keyword or clear the search filter."
+                      : "Check back later — this section will fill up as material is added."
+                  }
+                />
               ) : (
                 list.map((resource) => (
                   <ResourceRow
