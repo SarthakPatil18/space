@@ -42,35 +42,17 @@ export function SiteHeader() {
 export function SiteFooter() {
   return (
     <footer className="mt-20 sm:mt-24 border-t border-hairline bg-card/40">
-      <div className="container-page flex flex-col gap-6 py-8 sm:py-10 text-[13px] text-mute px-4 sm:px-6">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="space-y-1.5">
-            <Link to="/" className="w-fit transition-opacity hover:opacity-85 block">
-              <Logo className="h-5 sm:h-7 w-auto text-ink" />
-            </Link>
-            <p className="text-xs sm:text-[13px] text-mute">Every note. Every PYQ. Every file. One place.</p>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs font-medium">
-            <Link to="/" className="text-body hover:text-ink transition-colors">
-              Home
-            </Link>
-            <Link to="/subjects" className="text-body hover:text-ink transition-colors">
-              Subjects
-            </Link>
-            <Link to="/search" className="text-body hover:text-ink transition-colors">
-              Search
-            </Link>
-            <Link to="/privacy" className="text-body hover:text-ink transition-colors">
-              Privacy Policy
-            </Link>
-          </div>
+      <div className="container-page flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 py-8 sm:py-10 text-[13px] text-mute px-4 sm:px-6">
+        <div className="space-y-1">
+          <Link to="/" className="w-fit transition-opacity hover:opacity-85 block">
+            <Logo className="h-5 sm:h-7 w-auto text-ink" />
+          </Link>
+          <p className="text-xs sm:text-[13px]">Every note. Every PYQ. Every file. One place.</p>
         </div>
 
-        <div className="border-t border-hairline pt-4 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-mute">
-          <p>© {new Date().getFullYear()} SPACE. Academic resource platform for MITAOE students.</p>
-          <Link to="/privacy" className="hover:text-ink transition-colors">
-            Privacy & Terms
+        <div className="flex items-center gap-4 text-xs font-medium">
+          <Link to="/privacy" className="text-mute hover:text-ink transition-colors">
+            Privacy Policy
           </Link>
         </div>
       </div>
