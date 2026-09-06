@@ -5,15 +5,15 @@ import { Breadcrumbs } from "@/components/divhub/ui-bits";
 export const Route = createFileRoute("/privacy")({
   head: () => ({
     meta: [
-      { title: "Privacy Policy — SPACE" },
+      { title: "Privacy Policy | SPACE" },
       {
         name: "description",
-        content: "Privacy policy for Space — MITAOE's academic resource platform.",
+        content: "Privacy policy for Space, MITAOE academic resource platform.",
       },
-      { property: "og:title", content: "Privacy Policy — SPACE" },
+      { property: "og:title", content: "Privacy Policy | SPACE" },
       {
         property: "og:description",
-        content: "Privacy policy for Space — MITAOE's academic resource platform.",
+        content: "Privacy policy for Space, MITAOE academic resource platform.",
       },
       { property: "og:type", content: "website" },
     ],
@@ -49,7 +49,7 @@ function PrivacyPolicyPage() {
                 Overview
               </h2>
               <p className="text-[15px] sm:text-base leading-relaxed text-body">
-                This website, Space, is an educational resource that makes academic notes, syllabus documents, and previous year question papers (PYQs) publicly available to users in a more accessible way. The Site does not require user login or authentication and is designed solely as a public educational resource for MITAOE students.
+                This website, Space, is an educational resource that makes academic notes, syllabus documents, and previous year question papers publicly available to users in a more accessible way. The Site does not require user login or authentication and is designed solely as a public educational resource for MITAOE students.
               </p>
               <p className="text-[15px] sm:text-base leading-relaxed text-body">
                 This Site is an open educational project. Anyone is free to explore the material and utilize the resources for their coursework and exam preparation.
@@ -64,7 +64,7 @@ function PrivacyPolicyPage() {
                 The Site does not collect any personal information from its visitors. No user account creation or login is required to access the content.
               </p>
               <p className="text-[15px] sm:text-base leading-relaxed text-body">
-                <strong>Analytics & Preferences:</strong> User interface preferences, such as theme settings (Light or Dark mode), are stored locally on your device in your browser's local storage and are never transmitted to our servers. Anonymous, aggregated usage metrics may be collected for the sole purpose of monitoring server uptime, preventing bandwidth abuse, and improving the Site's performance. This data cannot be used to identify individual users.
+                <strong>Analytics and Preferences:</strong> User interface preferences, such as theme settings like Light or Dark mode, are stored locally on your device in your browser local storage and are never transmitted to our servers. Anonymous, aggregated usage metrics may be collected for the sole purpose of monitoring server uptime, preventing bandwidth abuse, and improving the Site performance. This data cannot be used to identify individual users.
               </p>
             </section>
 
@@ -76,25 +76,25 @@ function PrivacyPolicyPage() {
                 The content displayed on the Site consists of study notes, syllabus references, and previous year examination papers organized specifically for the purpose of student learning. The Site acts as a fast, searchable viewer and repository for designated educational content.
               </p>
               <p className="text-[15px] sm:text-base leading-relaxed text-body">
-                File previews and downloads are provided through secure cloud storage with time-limited access tokens to ensure stable delivery and prevent automated scraping.
+                File previews and downloads are provided through secure cloud storage with secure expiring access tokens to ensure stable delivery and prevent automated scraping.
               </p>
             </section>
 
             <section className="space-y-3">
               <h2 className="text-xl sm:text-2xl font-bold text-ink">
-                Third-Party Services
+                Third Party Services
               </h2>
               <p className="text-[15px] sm:text-base leading-relaxed text-body">
-                The Site relies on secure third-party cloud infrastructure (such as Supabase for database and storage management, and Cloudflare for content delivery) to host and serve files. These service providers adhere to industry-standard data security and privacy protocols.
+                The Site relies on secure third party cloud infrastructure, such as Supabase for database and storage management, and Cloudflare for content delivery, to host and serve files. These service providers adhere to industry standard data security and privacy protocols.
               </p>
             </section>
 
             <section className="space-y-3">
               <h2 className="text-xl sm:text-2xl font-bold text-ink">
-                Fair Use & Content Removal
+                Fair Use and Content Removal
               </h2>
               <p className="text-[15px] sm:text-base leading-relaxed text-body">
-                All materials provided on this platform are intended strictly for non-commercial educational use and personal study under fair use principles.
+                All materials provided on this platform are intended strictly for educational use and personal study under fair use principles.
               </p>
               <p className="text-[15px] sm:text-base leading-relaxed text-body">
                 If you are a copyright holder, professor, or author and believe any document on this site should be updated or removed, please contact us and we will promptly review and take down the specified material.

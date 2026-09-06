@@ -5,12 +5,12 @@ import { Breadcrumbs } from "@/components/divhub/ui-bits";
 export const Route = createFileRoute("/terms")({
   head: () => ({
     meta: [
-      { title: "Terms of Service — SPACE" },
+      { title: "Terms of Service | SPACE" },
       {
         name: "description",
-        content: "Terms and conditions for using Space — MITAOE's academic resource platform.",
+        content: "Terms and conditions for using Space, MITAOE academic resource platform.",
       },
-      { property: "og:title", content: "Terms of Service — SPACE" },
+      { property: "og:title", content: "Terms of Service | SPACE" },
       {
         property: "og:description",
         content: "Terms of service and educational usage guidelines for Space.",
@@ -49,7 +49,7 @@ function TermsOfServicePage() {
                 1. Purpose of the Platform
               </h2>
               <p className="text-[15px] sm:text-base leading-relaxed text-body">
-                Space is an open educational platform designed to make academic resources — including lecture notes, syllabus documents, and previous year question papers (PYQs) — accessible and organized in one place for MITAOE students.
+                Space is an open educational platform designed to make academic resources, including lecture notes, syllabus documents, and previous year question papers, accessible and organized in one place for MITAOE students.
               </p>
             </section>
 
@@ -58,7 +58,7 @@ function TermsOfServicePage() {
                 2. Permitted Use
               </h2>
               <p className="text-[15px] sm:text-base leading-relaxed text-body">
-                All materials provided on Space are intended strictly for personal study, exam preparation, and non-commercial educational use. Users can view, preview, and download resources freely without requiring an account or login.
+                All materials provided on Space are intended strictly for personal study, exam preparation, and educational use. Users can view, preview, and download resources freely without requiring an account or login.
               </p>
               <p className="text-[15px] sm:text-base leading-relaxed text-body">
                 Automated bulk downloading, scraping, or malicious attempts to disrupt platform availability are prohibited.
@@ -67,7 +67,7 @@ function TermsOfServicePage() {
 
             <section className="space-y-3">
               <h2 className="text-xl sm:text-2xl font-bold text-ink">
-                3. Academic Content & Intellectual Property
+                3. Academic Content and Intellectual Property
               </h2>
               <p className="text-[15px] sm:text-base leading-relaxed text-body">
                 The study notes, presentations, and educational documents hosted on this platform are the intellectual property of their respective student contributors, faculty, and creators. Space functions solely as a central repository and viewer to help students access learning materials.
@@ -79,7 +79,7 @@ function TermsOfServicePage() {
                 4. Contributing Material
               </h2>
               <p className="text-[15px] sm:text-base leading-relaxed text-body">
-                Students and educators are encouraged to share notes, PYQs, and verified academic references for the benefit of the student community. By sharing materials, contributors confirm that content is provided for educational assistance.
+                Students and educators are encouraged to share notes, question papers, and verified academic references for the benefit of the student community. By sharing materials, contributors confirm that content is provided for educational assistance.
               </p>
             </section>
 
@@ -88,13 +88,13 @@ function TermsOfServicePage() {
                 5. Disclaimer of Warranties
               </h2>
               <p className="text-[15px] sm:text-base leading-relaxed text-body">
-                All content on Space is provided on an "as-is" basis for reference purposes. While we strive to maintain accurate, high-quality resources, Space does not guarantee that materials are error-free or fully exhaustive. Students are encouraged to cross-reference with official institutional curriculum guidelines.
+                All content on Space is provided on an as is basis for reference purposes. While we strive to maintain accurate, high quality resources, Space does not guarantee that materials are error free or fully exhaustive. Students are encouraged to cross reference with official institutional curriculum guidelines.
               </p>
             </section>
 
             <section className="space-y-3">
               <h2 className="text-xl sm:text-2xl font-bold text-ink">
-                6. Content Review & Takedown
+                6. Content Review and Takedown
               </h2>
               <p className="text-[15px] sm:text-base leading-relaxed text-body">
                 We respect intellectual property rights. If you are a copyright holder, instructor, or contributor and believe any document should be corrected, updated, or removed, please contact us with the document details and we will promptly review and take appropriate action.
