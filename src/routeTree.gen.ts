@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as SearchRouteImport } from './routes/search'
+import { Route as TermsRouteImport } from './routes/terms'
 import { Route as SubjectsIndexRouteImport } from './routes/subjects/index'
 import { Route as SubjectsSubjectIdIndexRouteImport } from './routes/subjects/$subjectId/index'
 import { Route as SubjectsSubjectIdCategoryRouteImport } from './routes/subjects/$subjectId/$category'
@@ -37,6 +38,11 @@ const SearchRoute = SearchRouteImport.update({
   path: '/search',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SubjectsIndexRoute = SubjectsIndexRouteImport.update({
   id: '/subjects/',
   path: '/subjects/',
@@ -59,6 +65,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRoute
   '/privacy': typeof PrivacyRoute
   '/search': typeof SearchRoute
+  '/terms': typeof TermsRoute
   '/subjects/': typeof SubjectsIndexRoute
   '/subjects/$subjectId/$category': typeof SubjectsSubjectIdCategoryRoute
   '/subjects/$subjectId/': typeof SubjectsSubjectIdIndexRoute
@@ -68,6 +75,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminRoute
   '/privacy': typeof PrivacyRoute
   '/search': typeof SearchRoute
+  '/terms': typeof TermsRoute
   '/subjects': typeof SubjectsIndexRoute
   '/subjects/$subjectId/$category': typeof SubjectsSubjectIdCategoryRoute
   '/subjects/$subjectId': typeof SubjectsSubjectIdIndexRoute
@@ -78,6 +86,7 @@ export interface FileRoutesById {
   '/admin': typeof AdminRoute
   '/privacy': typeof PrivacyRoute
   '/search': typeof SearchRoute
+  '/terms': typeof TermsRoute
   '/subjects/': typeof SubjectsIndexRoute
   '/subjects/$subjectId/$category': typeof SubjectsSubjectIdCategoryRoute
   '/subjects/$subjectId/': typeof SubjectsSubjectIdIndexRoute
@@ -89,6 +98,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/privacy'
     | '/search'
+    | '/terms'
     | '/subjects/'
     | '/subjects/$subjectId/$category'
     | '/subjects/$subjectId/'
@@ -98,6 +108,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/privacy'
     | '/search'
+    | '/terms'
     | '/subjects'
     | '/subjects/$subjectId/$category'
     | '/subjects/$subjectId'
@@ -107,6 +118,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/privacy'
     | '/search'
+    | '/terms'
     | '/subjects/'
     | '/subjects/$subjectId/$category'
     | '/subjects/$subjectId/'
@@ -117,6 +129,7 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRoute
   PrivacyRoute: typeof PrivacyRoute
   SearchRoute: typeof SearchRoute
+  TermsRoute: typeof TermsRoute
   SubjectsIndexRoute: typeof SubjectsIndexRoute
   SubjectsSubjectIdCategoryRoute: typeof SubjectsSubjectIdCategoryRoute
   SubjectsSubjectIdIndexRoute: typeof SubjectsSubjectIdIndexRoute
@@ -152,6 +165,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SearchRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/subjects/': {
       id: '/subjects/'
       path: '/subjects'
@@ -181,6 +201,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRoute,
   PrivacyRoute: PrivacyRoute,
   SearchRoute: SearchRoute,
+  TermsRoute: TermsRoute,
   SubjectsIndexRoute: SubjectsIndexRoute,
   SubjectsSubjectIdCategoryRoute: SubjectsSubjectIdCategoryRoute,
   SubjectsSubjectIdIndexRoute: SubjectsSubjectIdIndexRoute,
