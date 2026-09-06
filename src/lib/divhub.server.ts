@@ -213,7 +213,7 @@ export const adminInsertResourceServer = createServerFn({ method: "POST" })
     if (p.exam_type) cleanPayload["exam_type"] = p.exam_type;
     if (p.year) cleanPayload["year"] = p.year;
 
-    let { error } = await adminSupabase.from("resources").insert(cleanPayload);
+    let { error } = await adminSupabase.from("resources").insert(cleanPayload as any);
 
     // Fallback if schema does not have exam_type or year
     if (
@@ -225,13 +225,13 @@ export const adminInsertResourceServer = createServerFn({ method: "POST" })
     ) {
       delete cleanPayload["exam_type"];
       delete cleanPayload["year"];
-      error = (await adminSupabase.from("resources").insert(cleanPayload)).error;
+      error = (await adminSupabase.from("resources").insert(cleanPayload as any)).error;
     }
 
     // Fallback if file_size exceeds constraint
     if (error && (error.message?.includes("file_size") || error.code === "23514")) {
       cleanPayload["file_size"] = null;
-      error = (await adminSupabase.from("resources").insert(cleanPayload)).error;
+      error = (await adminSupabase.from("resources").insert(cleanPayload as any)).error;
     }
 
     if (error) {
@@ -243,7 +243,7 @@ export const adminInsertResourceServer = createServerFn({ method: "POST" })
 
 /** Deletes a resource and its storage file securely. */
 export const adminDeleteResourceServer = createServerFn({ method: "POST" })
-  .validator((data: { authToken: string; id: string; filePath?: string | null }) => data)
+  .validator((data: { authToken: string; id: string; filePath?: string | null | undefined }) => data)
   .handler(async ({ data }) => {
     if (!verifyAdminToken(data.authToken)) {
       throw new Error("Unauthorized: Invalid administrative credentials");
