@@ -50,7 +50,13 @@ export function SiteFooter() {
           <p className="text-xs sm:text-[13px]">Every note. Every PYQ. Every file. One place.</p>
         </div>
 
-        <div className="flex items-center gap-6 text-xs font-medium">
+        <div className="flex flex-wrap items-center gap-6 text-xs font-medium">
+          <a
+            href="mailto:contact@mitaoe.space"
+            className="text-mute hover:text-ink transition-colors"
+          >
+            contact@mitaoe.space
+          </a>
           <Link to="/privacy" className="text-mute hover:text-ink transition-colors">
             Privacy Policy
           </Link>
