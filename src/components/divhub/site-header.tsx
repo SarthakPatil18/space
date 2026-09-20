@@ -52,10 +52,10 @@ export function SiteFooter() {
 
         <div className="flex flex-wrap items-center gap-6 text-xs font-medium">
           <a
-            href="mailto:contact@mitaoe.space"
+            href="mailto:space.mitaoe@gmail.com"
             className="text-mute hover:text-ink transition-colors"
           >
-            contact@mitaoe.space
+            space.mitaoe@gmail.com
           </a>
           <Link to="/privacy" className="text-mute hover:text-ink transition-colors">
             Privacy Policy

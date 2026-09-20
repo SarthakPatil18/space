@@ -119,10 +119,10 @@ function TermsOfServicePage() {
               </p>
               <p className="text-[15px] sm:text-base font-medium text-ink">
                 <a
-                  href="mailto:contact@mitaoe.space"
+                  href="mailto:space.mitaoe@gmail.com"
                   className="text-primary underline underline-offset-4 hover:opacity-80 transition-opacity"
                 >
-                  contact@mitaoe.space
+                  space.mitaoe@gmail.com
                 </a>
               </p>
             </section>
