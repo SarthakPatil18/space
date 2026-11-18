@@ -51,6 +51,7 @@ responsive behavior
 component hierarchy
 
 interactions
+instruct
 
 Reproduce the design as accurately as practical.
 
