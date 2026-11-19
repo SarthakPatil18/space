@@ -6,6 +6,7 @@ import {
   useRouter,
   HeadContent,
   Scripts,
+  type ErrorComponentProps,
 } from "@tanstack/react-router";
 import { type ReactNode } from "react";
 import { Analytics } from "@vercel/analytics/react";
@@ -35,7 +36,7 @@ function NotFoundComponent() {
   );
 }
 
-function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
+function ErrorComponent({ error, reset }: ErrorComponentProps) {
   console.error(error);
   const router = useRouter();
 
@@ -76,10 +77,16 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "SPACE — MITAOE Academic Resource Hub" },
-      { name: "description", content: "Academic resources, notes, files, PYQs, and syllabus for MITAOE students." },
+      {
+        name: "description",
+        content: "Academic resources, notes, files, PYQs, and syllabus for MITAOE students.",
+      },
       { name: "author", content: "MITAOE Space" },
       { property: "og:title", content: "SPACE — MITAOE Academic Resource Hub" },
-      { property: "og:description", content: "Academic resources, notes, files, PYQs, and syllabus for MITAOE students." },
+      {
+        property: "og:description",
+        content: "Academic resources, notes, files, PYQs, and syllabus for MITAOE students.",
+      },
       { property: "og:type", content: "website" },
       { property: "og:image", content: "/logo.png" },
       { name: "twitter:card", content: "summary_large_image" },
