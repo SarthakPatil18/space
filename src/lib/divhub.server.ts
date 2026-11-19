@@ -81,6 +81,7 @@ const getAdminClient = () => {
 const signedUrlCache = new Map<string, { url: string; expiresAt: number }>();
 const SIGNED_URL_TTL_MS = 50 * 60 * 1000; // 50 minutes
 const SIGNED_URL_EXPIRY_S = 3600; // 1 hour
+const MAX_CACHED_SIGNED_URLS = 500;
 
 function getCachedSignedUrl(filePath: string): string | null {
   const entry = signedUrlCache.get(filePath);
@@ -91,13 +92,31 @@ function getCachedSignedUrl(filePath: string): string | null {
 
 function setCachedSignedUrl(filePath: string, url: string): void {
   signedUrlCache.set(filePath, { url, expiresAt: Date.now() + SIGNED_URL_TTL_MS });
-  // Evict old entries if cache grows too large
-  if (signedUrlCache.size > 500) {
+  // Keep the cache bounded even when every entry is still fresh.
+  if (signedUrlCache.size >= MAX_CACHED_SIGNED_URLS) {
     const now = Date.now();
     for (const [key, val] of signedUrlCache) {
       if (now >= val.expiresAt) signedUrlCache.delete(key);
     }
+    while (signedUrlCache.size >= MAX_CACHED_SIGNED_URLS) {
+      const oldest = signedUrlCache.keys().next().value;
+      if (oldest === undefined) break;
+      signedUrlCache.delete(oldest);
+    }
   }
+}
+
+/** Rejects paths that could escape the bucket prefix or exhaust the cache. */
+function isValidStoragePath(value: unknown): value is string {
+  return (
+    typeof value === "string" &&
+    value.length > 0 &&
+    value.length <= 512 &&
+    !value.startsWith("/") &&
+    !value.includes("..") &&
+    !value.includes("\\") &&
+    [...value].every((char) => char.charCodeAt(0) >= 32)
+  );
 }
 
 function getAdminSecret(): string | undefined {
@@ -105,16 +124,35 @@ function getAdminSecret(): string | undefined {
   return secret && secret.trim() ? secret : undefined;
 }
 
+const ADMIN_TOKEN_TTL_MS = 12 * 60 * 60 * 1000; // 12 hours
+
 function createAdminToken(secret: string): string {
-  return crypto.createHmac("sha256", secret).update("mitaoe_space_admin_session").digest("hex");
+  const issuedAt = Date.now().toString(36);
+  const signature = crypto
+    .createHmac("sha256", secret)
+    .update(`mitaoe_space_admin_session:${issuedAt}`)
+    .digest("hex");
+  return `${issuedAt}.${signature}`;
 }
 
 function verifyAdminToken(token?: string): boolean {
   const secret = getAdminSecret();
   if (!secret || !token) return false;
   try {
-    const expected = createAdminToken(secret);
-    const tokenBuf = Buffer.from(token);
+    const [issuedAt, signature] = token.split(".");
+    if (!issuedAt || !signature) return false;
+
+    const issuedAtMs = parseInt(issuedAt, 36);
+    if (!Number.isFinite(issuedAtMs)) return false;
+
+    const age = Date.now() - issuedAtMs;
+    if (age < 0 || age > ADMIN_TOKEN_TTL_MS) return false;
+
+    const expected = crypto
+      .createHmac("sha256", secret)
+      .update(`mitaoe_space_admin_session:${issuedAt}`)
+      .digest("hex");
+    const tokenBuf = Buffer.from(signature);
     const expectedBuf = Buffer.from(expected);
     if (tokenBuf.length !== expectedBuf.length) return false;
     return crypto.timingSafeEqual(tokenBuf, expectedBuf);
@@ -127,7 +165,7 @@ function verifyAdminToken(token?: string): boolean {
 export const getSignedUrlServer = createServerFn({ method: "POST" })
   .validator((filePath: string) => filePath)
   .handler(async ({ data: filePath }) => {
-    if (!filePath || typeof filePath !== "string") {
+    if (!isValidStoragePath(filePath)) {
       throw new Error("Invalid file path");
     }
 
@@ -178,6 +216,9 @@ export const adminGetSignedUploadUrlServer = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     if (!verifyAdminToken(data.authToken)) {
       throw new Error("Unauthorized: Invalid administrative credentials");
+    }
+    if (!isValidStoragePath(data.filePath)) {
+      throw new Error("Invalid file path");
     }
     const adminSupabase = getAdminClient();
     const { data: uploadData, error } = await adminSupabase.storage
@@ -275,7 +316,7 @@ export const adminDeleteResourceServer = createServerFn({ method: "POST" })
       throw new Error(`Database delete failed: ${dbError.message}`);
     }
 
-    if (data.filePath) {
+    if (data.filePath && isValidStoragePath(data.filePath)) {
       await adminSupabase.storage.from("resources").remove([data.filePath]);
     }
 

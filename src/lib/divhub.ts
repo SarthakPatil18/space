@@ -136,7 +136,7 @@ export const searchQuery = (term: string) =>
     enabled: term.trim().length > 0,
     staleTime: 30 * 1000,
     queryFn: async () => {
-      const q = term.trim();
+      const q = term.trim().slice(0, 100);
       // Sanitize special PostgREST & SQL wildcard characters
       const sanitized = q.replace(/[%_\\(),]/g, " ").trim();
       if (!sanitized) {
