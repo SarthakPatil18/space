@@ -6,6 +6,7 @@ const navLinks = [
   { to: "/", label: "Home" },
   { to: "/subjects", label: "Subjects" },
   { to: "/search", label: "Search" },
+  { to: "/contribute", label: "Contribute" },
 ];
 
 export function SiteHeader() {
@@ -16,7 +17,7 @@ export function SiteHeader() {
           to="/"
           className="flex items-center gap-2 rounded-sm py-1 transition-opacity hover:opacity-85 shrink-0"
         >
-          <Logo className="h-7 sm:h-8 md:h-10 w-auto text-ink" />
+          <Logo className="h-6 sm:h-8 md:h-10 w-auto text-ink" />
         </Link>
 
         <nav aria-label="Main" className="flex items-center gap-1 sm:gap-2">
@@ -25,7 +26,9 @@ export function SiteHeader() {
               key={link.to}
               to={link.to}
               activeOptions={{ exact: link.to === "/" }}
-              className="rounded-full px-2.5 sm:px-3.5 py-1 sm:py-1.5 text-xs sm:text-sm font-medium text-body transition-colors hover:bg-hairline-soft hover:text-ink data-[status=active]:text-ink"
+              className={`rounded-full px-2 sm:px-3.5 py-1 sm:py-1.5 text-[11px] sm:text-sm font-medium text-body transition-colors hover:bg-hairline-soft hover:text-ink data-[status=active]:text-ink ${
+                link.to === "/" ? "hidden sm:inline-flex" : ""
+              }`}
             >
               {link.label}
             </Link>

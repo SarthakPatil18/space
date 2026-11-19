@@ -2,14 +2,11 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   ArrowRight,
   Check,
-  Clock,
+  FileQuestion,
   FolderOpen,
-  HeartHandshake,
   Mail,
   NotebookPen,
   ScrollText,
-  ShieldCheck,
-  FileQuestion,
 } from "lucide-react";
 import { SiteFooter, SiteHeader } from "@/components/divhub/site-header";
 import { Breadcrumbs } from "@/components/divhub/ui-bits";
@@ -40,47 +37,44 @@ const categories = [
   {
     icon: NotebookPen,
     title: "Notes",
-    description: "Lecture notes, handwritten notes, cheat sheets and study material.",
+    description: "Lecture, handwritten and revision notes.",
   },
   {
     icon: FileQuestion,
     title: "PYQs",
-    description: "Previous year question papers, with the exam year and type if you know them.",
+    description: "Previous year papers, with year and exam type if known.",
   },
   {
     icon: ScrollText,
     title: "Syllabus",
-    description: "Official syllabus documents for any subject or unit.",
+    description: "Official syllabus documents for any subject.",
   },
   {
     icon: FolderOpen,
     title: "Files",
-    description: "Presentations, lab manuals, reference sheets and other subject material.",
+    description: "Slides, lab manuals, reference sheets and more.",
   },
 ];
 
 const guidelines = [
-  "Include the subject name, semester and section so the file lands in the right place.",
-  "Send clear, readable files. Scans should be straight, in focus and full-page.",
-  "Use descriptive file names — for example, DBMS_Unit3_Notes.pdf instead of IMG_2041.pdf.",
-  "Only share material you are allowed to pass on. No answer keys that are meant to stay private.",
-  "Remove personal information like roll numbers, phone numbers and signatures.",
+  "Include the subject, semester and section.",
+  "Send readable full-page scans or original PDFs.",
+  "Name files clearly, like DBMS_Unit3_Notes.pdf.",
+  "Remove personal details such as roll numbers and signatures.",
 ];
 
 const steps = [
   {
-    title: "Send your files",
-    description: "Email the documents to us. A Drive link, a zip or a folder of PDFs all work.",
+    title: "Send",
+    description: "Email your files or a Drive link.",
   },
   {
-    title: "We review it",
-    description:
-      "We check the subject, category and readability, then file everything in the right place.",
+    title: "Review",
+    description: "We check the subject and readability.",
   },
   {
-    title: "Everyone gets it",
-    description:
-      "Your material goes live in seconds for every student in the division — no login needed.",
+    title: "Publish",
+    description: "It goes live for everyone, no login needed.",
   },
 ];
 
@@ -103,62 +97,75 @@ function ContributePage() {
 
           <p className="eyebrow">Contribute</p>
           <h1 className="mt-2 text-3xl sm:text-4xl font-bold tracking-tight text-ink">
-            Your notes can save someone a night.
+            Help keep Space complete.
           </h1>
-          <p className="mt-4 max-w-2xl text-[15px] sm:text-base leading-relaxed text-body">
-            Space grows because students share. If you have notes, question papers, syllabus
-            documents or any other useful subject material, send it over — it takes a minute and
-            helps the whole division.
+          <p className="mt-4 max-w-xl text-[15px] sm:text-base leading-relaxed text-body">
+            Share notes, PYQs or files from your semester. One upload can save someone an entire
+            night.
           </p>
 
-          <div className="mt-7 flex flex-wrap items-center gap-3">
+          <div className="mt-6 flex flex-wrap items-center gap-3">
             <a href={mailtoHref} className="btn-primary-sm">
               <Mail className="size-4" aria-hidden="true" />
               Send your files
             </a>
             <Link to="/subjects" className="btn-ghost-sm">
-              See what's missing
+              Browse subjects
               <ArrowRight className="size-4" aria-hidden="true" />
             </Link>
           </div>
         </div>
 
-        <section aria-labelledby="categories-heading" className="mt-14">
-          <div className="max-w-3xl">
-            <p className="eyebrow">What to send</p>
-            <h2 id="categories-heading" className="heading-lg mt-1">
-              The four things every subject needs
-            </h2>
-          </div>
+        <section aria-labelledby="what-heading" className="mt-12 max-w-3xl">
+          <h2 id="what-heading" className="heading-md">
+            What to send
+          </h2>
 
-          <div className="mt-6 grid gap-4 sm:grid-cols-2">
+          <div className="mt-4 hairline-card divide-y divide-hairline">
             {categories.map((category) => (
-              <div key={category.title} className="hairline-card p-5">
-                <div className="flex items-center gap-2.5">
-                  <span className="flex size-8 items-center justify-center rounded-lg border border-hairline bg-hairline-soft">
-                    <category.icon className="size-4 text-ink" aria-hidden="true" />
-                  </span>
-                  <h3 className="text-[15px] font-semibold text-ink">{category.title}</h3>
+              <div key={category.title} className="flex items-center gap-3.5 px-5 py-3.5">
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-hairline-soft">
+                  <category.icon className="size-4 text-ink" aria-hidden="true" />
+                </span>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-ink">{category.title}</p>
+                  <p className="text-[13px] text-mute">{category.description}</p>
                 </div>
-                <p className="mt-3 text-sm leading-relaxed text-mute">{category.description}</p>
               </div>
             ))}
           </div>
         </section>
 
-        <section aria-labelledby="send-heading" className="mt-14">
-          <div className="max-w-3xl">
-            <p className="eyebrow">Before you send</p>
-            <h2 id="send-heading" className="heading-lg mt-1">
-              A few small things that help a lot
-            </h2>
-          </div>
+        <section aria-labelledby="how-heading" className="mt-12 max-w-3xl">
+          <h2 id="how-heading" className="heading-md">
+            How it works
+          </h2>
 
-          <ul className="mt-6 space-y-3">
+          <ol className="mt-4 grid gap-4 sm:grid-cols-3">
+            {steps.map((step, index) => (
+              <li key={step.title} className="flex gap-3">
+                <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-ink text-[11px] font-semibold text-background">
+                  {index + 1}
+                </span>
+                <div>
+                  <p className="text-sm font-semibold text-ink">{step.title}</p>
+                  <p className="mt-0.5 text-[13px] leading-relaxed text-mute">{step.description}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+        </section>
+
+        <section aria-labelledby="before-heading" className="mt-12 max-w-3xl">
+          <h2 id="before-heading" className="heading-md">
+            Before you send
+          </h2>
+
+          <ul className="mt-4 grid gap-2.5 sm:grid-cols-2">
             {guidelines.map((guideline) => (
               <li
                 key={guideline}
-                className="flex items-start gap-3 text-[15px] leading-relaxed text-body"
+                className="flex items-start gap-2.5 text-sm leading-relaxed text-body"
               >
                 <Check className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
                 <span>{guideline}</span>
@@ -167,77 +174,36 @@ function ContributePage() {
           </ul>
         </section>
 
-        <section aria-labelledby="how-heading" className="mt-14">
-          <div className="max-w-3xl">
-            <p className="eyebrow">How it works</p>
-            <h2 id="how-heading" className="heading-lg mt-1">
-              From your inbox to the library
-            </h2>
-          </div>
-
-          <ol className="mt-6 grid gap-4 sm:grid-cols-3">
-            {steps.map((step, index) => (
-              <li key={step.title} className="hairline-card p-5">
-                <span className="eyebrow">Step {index + 1}</span>
-                <h3 className="mt-2 text-[15px] font-semibold text-ink">{step.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-mute">{step.description}</p>
-              </li>
-            ))}
-          </ol>
-
-          <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-xs text-faint">
-            <span className="inline-flex items-center gap-1.5">
-              <Clock className="size-3.5" aria-hidden="true" />
-              Most files are live within a day
-            </span>
-            <span className="inline-flex items-center gap-1.5">
-              <ShieldCheck className="size-3.5" aria-hidden="true" />
-              Reviewed before publishing
-            </span>
-            <span className="inline-flex items-center gap-1.5">
-              <HeartHandshake className="size-3.5" aria-hidden="true" />
-              Free for every student
-            </span>
-          </div>
-        </section>
-
         <section
           aria-labelledby="contact-heading"
-          className="mt-14 max-w-3xl hairline-card p-6 sm:p-8"
+          className="mt-12 max-w-3xl hairline-card p-6 sm:p-7"
         >
           <h2 id="contact-heading" className="heading-md">
-            Ready to send something?
+            Ready to contribute?
           </h2>
-          <p className="mt-2 text-[15px] leading-relaxed text-body">
-            Email your files to{" "}
+          <p className="mt-2 text-sm leading-relaxed text-body">
+            Email{" "}
             <a
               href="mailto:space.mitaoe@gmail.com"
               className="font-medium text-ink underline underline-offset-4 transition-opacity hover:opacity-80"
             >
               space.mitaoe@gmail.com
             </a>{" "}
-            with the subject, semester and category. Want credit for your contribution? Say so and
-            we'll add your name to the resource.
+            with your files and subject details. Want credit? Just say so.
           </p>
 
-          <div className="mt-5 flex flex-wrap items-center gap-3">
+          <div className="mt-4 flex flex-wrap items-center gap-3">
             <a href={mailtoHref} className="btn-primary-sm">
               <Mail className="size-4" aria-hidden="true" />
               Email a contribution
             </a>
-            <Link to="/terms" className="btn-ghost-sm">
-              Read the contribution guidelines
+            <Link
+              to="/terms"
+              className="text-xs text-mute underline underline-offset-4 transition-colors hover:text-ink"
+            >
+              Contribution guidelines
             </Link>
           </div>
-
-          <p className="mt-5 text-xs leading-relaxed text-faint">
-            By sending material you confirm it is safe to share for educational use. If something
-            needs to be corrected or removed, see the{" "}
-            <Link to="/terms" className="text-mute underline underline-offset-4 hover:text-ink">
-              Terms of Service
-            </Link>
-            .
-          </p>
         </section>
       </main>
       <SiteFooter />
