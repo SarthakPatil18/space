@@ -57,6 +57,9 @@ export function SiteFooter() {
           >
             space.mitaoe@gmail.com
           </a>
+          <Link to="/contribute" className="text-mute hover:text-ink transition-colors">
+            Contribute
+          </Link>
           <Link to="/privacy" className="text-mute hover:text-ink transition-colors">
             Privacy Policy
           </Link>
@@ -68,4 +71,3 @@ export function SiteFooter() {
     </footer>
   );
 }
-

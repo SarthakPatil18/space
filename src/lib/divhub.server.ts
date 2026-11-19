@@ -44,7 +44,10 @@ function createSupabaseFetch(supabaseKey: string): typeof fetch {
       new Headers(init.headers).forEach((value, key) => headers.set(key, value));
     }
 
-    if (isNewSupabaseApiKey(supabaseKey) && headers.get("Authorization") === `Bearer ${supabaseKey}`) {
+    if (
+      isNewSupabaseApiKey(supabaseKey) &&
+      headers.get("Authorization") === `Bearer ${supabaseKey}`
+    ) {
       headers.delete("Authorization");
     }
 
@@ -97,19 +100,20 @@ function setCachedSignedUrl(filePath: string, url: string): void {
   }
 }
 
-function getAdminSecret(): string {
-  return getEnvValue("ADMIN_SECRET") || "mitaoe@admin2026";
+function getAdminSecret(): string | undefined {
+  const secret = getEnvValue("ADMIN_SECRET");
+  return secret && secret.trim() ? secret : undefined;
 }
 
-function createAdminToken(): string {
-  const secret = getAdminSecret();
+function createAdminToken(secret: string): string {
   return crypto.createHmac("sha256", secret).update("mitaoe_space_admin_session").digest("hex");
 }
 
 function verifyAdminToken(token?: string): boolean {
-  if (!token) return false;
+  const secret = getAdminSecret();
+  if (!secret || !token) return false;
   try {
-    const expected = createAdminToken();
+    const expected = createAdminToken(secret);
     const tokenBuf = Buffer.from(token);
     const expectedBuf = Buffer.from(expected);
     if (tokenBuf.length !== expectedBuf.length) return false;
@@ -149,10 +153,23 @@ export const adminVerifySecretServer = createServerFn({ method: "POST" })
   .validator((passkey: string) => passkey)
   .handler(async ({ data: passkey }) => {
     const secret = getAdminSecret();
-    if (!passkey || passkey !== secret) {
+    if (!secret) {
+      return {
+        success: false,
+        token: null,
+        error: "Admin access is not configured on this deployment.",
+      };
+    }
+
+    const passkeyBuf = Buffer.from(passkey || "");
+    const secretBuf = Buffer.from(secret);
+    const matches =
+      passkeyBuf.length === secretBuf.length && crypto.timingSafeEqual(passkeyBuf, secretBuf);
+
+    if (!matches) {
       return { success: false, token: null, error: "Invalid administrative passkey" };
     }
-    return { success: true, token: createAdminToken(), error: null };
+    return { success: true, token: createAdminToken(secret), error: null };
   });
 
 /** Generates a single-use pre-signed upload URL so client can upload file directly to Storage. */
@@ -243,17 +260,16 @@ export const adminInsertResourceServer = createServerFn({ method: "POST" })
 
 /** Deletes a resource and its storage file securely. */
 export const adminDeleteResourceServer = createServerFn({ method: "POST" })
-  .validator((data: { authToken: string; id: string; filePath?: string | null | undefined }) => data)
+  .validator(
+    (data: { authToken: string; id: string; filePath?: string | null | undefined }) => data,
+  )
   .handler(async ({ data }) => {
     if (!verifyAdminToken(data.authToken)) {
       throw new Error("Unauthorized: Invalid administrative credentials");
     }
     const adminSupabase = getAdminClient();
 
-    const { error: dbError } = await adminSupabase
-      .from("resources")
-      .delete()
-      .eq("id", data.id);
+    const { error: dbError } = await adminSupabase.from("resources").delete().eq("id", data.id);
 
     if (dbError) {
       throw new Error(`Database delete failed: ${dbError.message}`);
@@ -265,4 +281,3 @@ export const adminDeleteResourceServer = createServerFn({ method: "POST" })
 
     return { success: true };
   });
-
