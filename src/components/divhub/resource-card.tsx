@@ -4,6 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import {
   CATEGORY_META,
+  getDriveDownloadUrl,
   getExamType,
   getExamYear,
   getSubjectColor,
@@ -23,14 +24,17 @@ export function ResourceCard({
   showCategory?: boolean;
 }) {
   const [busy, setBusy] = useState<"download" | null>(null);
-  const [activeModalResource, setActiveModalResource] =
-    useState<ModalResource>(null);
+  const [activeModalResource, setActiveModalResource] = useState<ModalResource>(null);
 
   const subjectColor = getSubjectColor(resource.subjects);
   const examType = getExamType(resource);
   const examYear = getExamYear(resource);
 
   async function handleDownload() {
+    if (resource.drive_file_id) {
+      window.open(getDriveDownloadUrl(resource.drive_file_id), "_blank", "noopener,noreferrer");
+      return;
+    }
     try {
       setBusy("download");
       const url = await resolveResourceUrl(resource);
@@ -48,9 +52,7 @@ export function ResourceCard({
       URL.revokeObjectURL(blobUrl);
       toast.success("Download started");
     } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Could not download this file.",
-      );
+      toast.error(error instanceof Error ? error.message : "Could not download this file.");
     } finally {
       setBusy(null);
     }
@@ -135,9 +137,7 @@ export function ResourceCard({
 
           {/* Description snippet if present */}
           {resource.description ? (
-            <p className="mt-1 text-xs text-mute line-clamp-1">
-              {resource.description}
-            </p>
+            <p className="mt-1 text-xs text-mute line-clamp-1">{resource.description}</p>
           ) : null}
         </div>
 
@@ -171,10 +171,7 @@ export function ResourceCard({
       </article>
 
       {/* PDF / Document Modal Preview */}
-      <PdfViewerModal
-        resource={activeModalResource}
-        onClose={() => setActiveModalResource(null)}
-      />
+      <PdfViewerModal resource={activeModalResource} onClose={() => setActiveModalResource(null)} />
     </>
   );
 }

@@ -135,7 +135,7 @@ function createAdminToken(secret: string): string {
   return `${issuedAt}.${signature}`;
 }
 
-function verifyAdminToken(token?: string): boolean {
+export function verifyAdminToken(token?: string): boolean {
   const secret = getAdminSecret();
   if (!secret || !token) return false;
   try {
@@ -266,6 +266,8 @@ export const adminInsertResourceServer = createServerFn({ method: "POST" })
       file_type: p.file_type,
       file_size: p.file_size,
       description: p.description || null,
+      status: "approved",
+      approved_at: new Date().toISOString(),
     };
 
     if (p.exam_type) cleanPayload["exam_type"] = p.exam_type;
