@@ -2,14 +2,15 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   ArrowRight,
   Check,
-  FileQuestion,
-  FolderOpen,
+  Clock3,
+  FileCheck2,
   Mail,
-  NotebookPen,
-  ScrollText,
+  ShieldCheck,
+  UploadCloud,
 } from "lucide-react";
 import { SiteFooter, SiteHeader } from "@/components/divhub/site-header";
 import { Breadcrumbs } from "@/components/divhub/ui-bits";
+import { UploadForm } from "@/components/divhub/upload-form";
 
 export const Route = createFileRoute("/contribute")({
   head: () => ({
@@ -33,26 +34,21 @@ export const Route = createFileRoute("/contribute")({
   component: ContributePage,
 });
 
-const categories = [
+const steps = [
   {
-    icon: NotebookPen,
-    title: "Notes",
-    description: "Lecture, handwritten and revision notes.",
+    icon: UploadCloud,
+    title: "Upload",
+    description: "Pick a subject, category and year, then drop your files.",
   },
   {
-    icon: FileQuestion,
-    title: "PYQs",
-    description: "Previous year papers, with year and exam type if known.",
+    icon: Clock3,
+    title: "Review",
+    description: "Every file waits in a pending queue until an admin checks it.",
   },
   {
-    icon: ScrollText,
-    title: "Syllabus",
-    description: "Official syllabus documents for any subject.",
-  },
-  {
-    icon: FolderOpen,
-    title: "Files",
-    description: "Slides, lab manuals, reference sheets and more.",
+    icon: FileCheck2,
+    title: "Publish",
+    description: "Approved files go live in the public library, no login needed.",
   },
 ];
 
@@ -63,28 +59,13 @@ const guidelines = [
   "Remove personal details such as roll numbers and signatures.",
 ];
 
-const steps = [
-  {
-    title: "Send",
-    description: "Email your files or a Drive link.",
-  },
-  {
-    title: "Review",
-    description: "We check the subject and readability.",
-  },
-  {
-    title: "Publish",
-    description: "It goes live for everyone, no login needed.",
-  },
-];
-
 const mailtoHref =
   "mailto:space.mitaoe@gmail.com" +
   "?subject=" +
   encodeURIComponent("Contribution for SPACE") +
   "&body=" +
   encodeURIComponent(
-    "Subject:\nSemester:\nSection:\nCategory (Notes / PYQs / Syllabus / Files):\n\nWhat am I sharing:\n",
+    "Subject:\nSemester:\nSection:\nCategory (Notes / PYQs / Practicals / Assignments / Syllabus / Reference / Other):\n\nWhat am I sharing:\n",
   );
 
 function ContributePage() {
@@ -100,40 +81,27 @@ function ContributePage() {
             Help keep Space complete.
           </h1>
           <p className="mt-4 max-w-xl text-[15px] sm:text-base leading-relaxed text-body">
-            Share notes, PYQs or files from your semester. One upload can save someone an entire
-            night.
+            Share notes, PYQs or files from your semester. Upload them here and they go to the
+            review queue. One upload can save someone an entire night.
           </p>
 
-          <div className="mt-6 flex flex-wrap items-center gap-3">
-            <a href={mailtoHref} className="btn-primary-sm">
-              <Mail className="size-4" aria-hidden="true" />
-              Send your files
-            </a>
-            <Link to="/subjects" className="btn-ghost-sm">
-              Browse subjects
-              <ArrowRight className="size-4" aria-hidden="true" />
-            </Link>
+          <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-[13px] text-mute">
+            <span className="inline-flex items-center gap-1.5">
+              <ShieldCheck className="size-3.5 text-primary" aria-hidden="true" />
+              Admin reviewed before publishing
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <Check className="size-3.5 text-primary" aria-hidden="true" />
+              PDF · DOC · DOCX · PPT · PPTX
+            </span>
           </div>
         </div>
 
-        <section aria-labelledby="what-heading" className="mt-12 max-w-3xl">
-          <h2 id="what-heading" className="heading-md">
-            What to send
+        <section aria-labelledby="upload-heading" className="mt-8 max-w-3xl">
+          <h2 id="upload-heading" className="sr-only">
+            Upload a resource
           </h2>
-
-          <div className="mt-4 hairline-card divide-y divide-hairline">
-            {categories.map((category) => (
-              <div key={category.title} className="flex items-center gap-3.5 px-5 py-3.5">
-                <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-hairline-soft">
-                  <category.icon className="size-4 text-ink" aria-hidden="true" />
-                </span>
-                <div className="min-w-0">
-                  <p className="text-sm font-semibold text-ink">{category.title}</p>
-                  <p className="text-[13px] text-mute">{category.description}</p>
-                </div>
-              </div>
-            ))}
-          </div>
+          <UploadForm />
         </section>
 
         <section aria-labelledby="how-heading" className="mt-12 max-w-3xl">
@@ -143,14 +111,14 @@ function ContributePage() {
 
           <ol className="mt-4 grid gap-4 sm:grid-cols-3">
             {steps.map((step, index) => (
-              <li key={step.title} className="flex gap-3">
-                <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-ink text-[11px] font-semibold text-background">
-                  {index + 1}
+              <li key={step.title} className="hairline-card px-4 py-4">
+                <span className="flex size-8 items-center justify-center rounded-lg bg-hairline-soft">
+                  <step.icon className="size-4 text-ink" aria-hidden="true" />
                 </span>
-                <div>
-                  <p className="text-sm font-semibold text-ink">{step.title}</p>
-                  <p className="mt-0.5 text-[13px] leading-relaxed text-mute">{step.description}</p>
-                </div>
+                <p className="mt-3 text-sm font-semibold text-ink">
+                  {index + 1}. {step.title}
+                </p>
+                <p className="mt-1 text-[13px] leading-relaxed text-mute">{step.description}</p>
               </li>
             ))}
           </ol>
@@ -158,7 +126,7 @@ function ContributePage() {
 
         <section aria-labelledby="before-heading" className="mt-12 max-w-3xl">
           <h2 id="before-heading" className="heading-md">
-            Before you send
+            Before you upload
           </h2>
 
           <ul className="mt-4 grid gap-2.5 sm:grid-cols-2">
@@ -179,7 +147,7 @@ function ContributePage() {
           className="mt-12 max-w-3xl hairline-card p-6 sm:p-7"
         >
           <h2 id="contact-heading" className="heading-md">
-            Ready to contribute?
+            Upload not working?
           </h2>
           <p className="mt-2 text-sm leading-relaxed text-body">
             Email{" "}
@@ -197,6 +165,10 @@ function ContributePage() {
               <Mail className="size-4" aria-hidden="true" />
               Email a contribution
             </a>
+            <Link to="/subjects" className="btn-ghost-sm">
+              Browse subjects
+              <ArrowRight className="size-4" aria-hidden="true" />
+            </Link>
             <Link
               to="/terms"
               className="text-xs text-mute underline underline-offset-4 transition-colors hover:text-ink"

@@ -29,6 +29,7 @@ import {
   adminDeleteResourceServer,
 } from "@/lib/divhub.server";
 import { PdfViewerModal, type ModalResource } from "@/components/divhub/pdf-viewer-modal";
+import { AdminSubmissions } from "@/components/divhub/admin-submissions";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
@@ -875,6 +876,21 @@ function AdminPage() {
               )}
             </div>
           </div>
+        </div>
+
+        {/* Student submission queue */}
+        <div className="mt-8">
+          <AdminSubmissions
+            authToken={authToken}
+            subjects={(subjects.data ?? []).map((subject) => ({
+              id: subject.id,
+              name: subject.name,
+              code: subject.code,
+            }))}
+            onChanged={() => {
+              void queryClient.invalidateQueries({ queryKey: ["resources"] });
+            }}
+          />
         </div>
       </main>
       <SiteFooter />

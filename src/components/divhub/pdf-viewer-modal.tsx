@@ -9,7 +9,7 @@ import {
   Presentation,
 } from "lucide-react";
 import { toast } from "sonner";
-import { resolveResourceUrl } from "@/lib/divhub";
+import { getDriveDownloadUrl, getDrivePreviewUrl, resolveResourceUrl } from "@/lib/divhub";
 
 export type ModalResource = {
   id: string;
@@ -19,6 +19,7 @@ export type ModalResource = {
   file_size?: number | null;
   exam_type?: string | null;
   year?: number | null;
+  drive_file_id?: string | null;
 } | null;
 
 function getFileType(fileOrPath: string): "image" | "ppt" | "pdf" {
@@ -32,9 +33,7 @@ function isMobileUser(): boolean {
   if (typeof window === "undefined") return false;
   return (
     window.innerWidth <= 768 ||
-    /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(
-      navigator.userAgent,
-    )
+    /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent)
   );
 }
 
@@ -55,6 +54,10 @@ export function PdfViewerModal({
 
   async function handleDownload() {
     if (!url || !resource) return;
+    if (resource.drive_file_id) {
+      window.open(getDriveDownloadUrl(resource.drive_file_id), "_blank", "noopener,noreferrer");
+      return;
+    }
     try {
       setDownloading(true);
       const response = await fetch(url);
@@ -70,9 +73,7 @@ export function PdfViewerModal({
       a.click();
       URL.revokeObjectURL(blobUrl);
     } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Could not download this file.",
-      );
+      toast.error(error instanceof Error ? error.message : "Could not download this file.");
     } finally {
       setDownloading(false);
     }
@@ -111,6 +112,14 @@ export function PdfViewerModal({
     setUrl(null);
     setIsMobile(isMobileUser());
 
+    if (resource.drive_file_id) {
+      setUrl(getDrivePreviewUrl(resource.drive_file_id));
+      setLoading(false);
+      return () => {
+        isMounted = false;
+      };
+    }
+
     resolveResourceUrl(resource)
       .then((resolvedUrl) => {
         if (isMounted) {
@@ -120,9 +129,7 @@ export function PdfViewerModal({
       })
       .catch((err) => {
         if (isMounted) {
-          setError(
-            err instanceof Error ? err.message : "Failed to load document preview.",
-          );
+          setError(err instanceof Error ? err.message : "Failed to load document preview.");
           setLoading(false);
         }
       });
@@ -203,20 +210,21 @@ export function PdfViewerModal({
           ) : error ? (
             <div className="flex flex-col items-center justify-center p-8 text-center max-w-md space-y-3">
               <AlertCircle className="size-10 text-destructive" />
-              <h3 className="text-base font-semibold text-ink">
-                Failed to load preview
-              </h3>
+              <h3 className="text-base font-semibold text-ink">Failed to load preview</h3>
               <p className="text-sm text-mute">{error}</p>
-              <button
-                type="button"
-                onClick={onClose}
-                className="btn-ghost-sm mt-2"
-              >
+              <button type="button" onClick={onClose} className="btn-ghost-sm mt-2">
                 Close Preview
               </button>
             </div>
           ) : url ? (
-            fileType === "image" ? (
+            resource.drive_file_id ? (
+              <iframe
+                src={url}
+                title={resource.title}
+                className="h-full w-full border-0 rounded-none sm:rounded-lg shadow-xs"
+                allow="autoplay"
+              />
+            ) : fileType === "image" ? (
               <div className="flex items-center justify-center h-full w-full overflow-auto p-2">
                 <img
                   src={url}
@@ -232,11 +240,7 @@ export function PdfViewerModal({
               />
             ) : (
               <iframe
-                src={
-                  isMobile
-                    ? googleDocsViewerUrl
-                    : `${url}#toolbar=1&navpanes=0&zoom=100`
-                }
+                src={isMobile ? googleDocsViewerUrl : `${url}#toolbar=1&navpanes=0&zoom=100`}
                 title={resource.title}
                 className="h-full w-full border-0 rounded-none sm:rounded-lg shadow-xs"
               />
@@ -247,4 +251,3 @@ export function PdfViewerModal({
     </div>
   );
 }
-

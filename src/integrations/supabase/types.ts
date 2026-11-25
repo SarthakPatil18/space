@@ -29,6 +29,14 @@ export type Database = {
           updated_at: string
           exam_type: string | null
           year: number | null
+          academic_year: number | null
+          approved_at: string | null
+          content_hash: string | null
+          contributor_name: string | null
+          drive_file_id: string | null
+          drive_web_view_link: string | null
+          file_name: string | null
+          status: "pending" | "approved" | "rejected"
         }
         Insert: {
           category: Database["public"]["Enums"]["resource_category"]
@@ -44,6 +52,14 @@ export type Database = {
           updated_at?: string
           exam_type?: string | null
           year?: number | null
+          academic_year?: number | null
+          approved_at?: string | null
+          content_hash?: string | null
+          contributor_name?: string | null
+          drive_file_id?: string | null
+          drive_web_view_link?: string | null
+          file_name?: string | null
+          status?: "pending" | "approved" | "rejected"
         }
         Update: {
           category?: Database["public"]["Enums"]["resource_category"]
@@ -59,6 +75,14 @@ export type Database = {
           updated_at?: string
           exam_type?: string | null
           year?: number | null
+          academic_year?: number | null
+          approved_at?: string | null
+          content_hash?: string | null
+          contributor_name?: string | null
+          drive_file_id?: string | null
+          drive_web_view_link?: string | null
+          file_name?: string | null
+          status?: "pending" | "approved" | "rejected"
         }
         Relationships: [
           {
@@ -148,7 +172,15 @@ export type Database = {
     }
     Functions: {}
     Enums: {
-      resource_category: "notes" | "files" | "pyqs" | "syllabus"
+      resource_category:
+        | "notes"
+        | "files"
+        | "pyqs"
+        | "syllabus"
+        | "practicals"
+        | "assignments"
+        | "reference"
+        | "other"
     }
     CompositeTypes: {
       [_ in never]: never

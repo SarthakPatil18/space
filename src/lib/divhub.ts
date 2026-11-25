@@ -8,17 +8,52 @@ export type Subject = Database["public"]["Tables"]["subjects"]["Row"];
 export type Resource = Database["public"]["Tables"]["resources"]["Row"];
 export type Category = Database["public"]["Enums"]["resource_category"];
 
-export const CATEGORIES: Category[] = ["notes", "syllabus", "pyqs", "files"];
+export const CATEGORIES: Category[] = [
+  "notes",
+  "pyqs",
+  "practicals",
+  "assignments",
+  "syllabus",
+  "reference",
+  "files",
+  "other",
+];
 
 export const CATEGORY_META: Record<
   Category,
   { label: string; blurb: string }
 > = {
   notes: { label: "Notes", blurb: "Lecture and handwritten notes" },
-  syllabus: { label: "Syllabus", blurb: "Official syllabus documents" },
   pyqs: { label: "PYQs", blurb: "Previous year question papers" },
+  practicals: { label: "Practicals", blurb: "Lab manuals and practical files" },
+  assignments: { label: "Assignments", blurb: "Assignment sheets and solutions" },
+  syllabus: { label: "Syllabus", blurb: "Official syllabus documents" },
+  reference: { label: "Reference", blurb: "Reference books and extra material" },
   files: { label: "Files", blurb: "Other subject material" },
+  other: { label: "Other", blurb: "Anything that does not fit elsewhere" },
 };
+
+export const UPLOAD_CATEGORIES: Category[] = [
+  "pyqs",
+  "notes",
+  "practicals",
+  "assignments",
+  "syllabus",
+  "reference",
+  "other",
+];
+
+export function getDrivePreviewUrl(fileId: string): string {
+  return `https://drive.google.com/file/d/${encodeURIComponent(fileId)}/preview`;
+}
+
+export function getDriveDownloadUrl(fileId: string): string {
+  return `https://drive.google.com/uc?export=download&id=${encodeURIComponent(fileId)}`;
+}
+
+export function getDriveViewUrl(fileId: string): string {
+  return `https://drive.google.com/file/d/${encodeURIComponent(fileId)}/view`;
+}
 
 export const DEFAULT_SUBJECT_COLORS: Record<string, string> = {
   OS: "#3B82F6",

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import {
   CATEGORY_META,
+  getDriveDownloadUrl,
   getExamType,
   getExamYear,
   getSubjectColor,
@@ -28,14 +29,17 @@ export function ResourceRow({
   showCategory?: boolean;
 }) {
   const [busy, setBusy] = useState<"download" | null>(null);
-  const [activeModalResource, setActiveModalResource] =
-    useState<ModalResource>(null);
+  const [activeModalResource, setActiveModalResource] = useState<ModalResource>(null);
 
   const subjectColor = getSubjectColor(resource.subjects);
   const examType = getExamType(resource);
   const examYear = getExamYear(resource);
 
   async function handleDownload() {
+    if (resource.drive_file_id) {
+      window.open(getDriveDownloadUrl(resource.drive_file_id), "_blank", "noopener,noreferrer");
+      return;
+    }
     try {
       setBusy("download");
       const url = await resolveResourceUrl(resource);
@@ -52,9 +56,7 @@ export function ResourceRow({
       a.click();
       URL.revokeObjectURL(blobUrl);
     } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Could not download this file.",
-      );
+      toast.error(error instanceof Error ? error.message : "Could not download this file.");
     } finally {
       setBusy(null);
     }
@@ -89,13 +91,13 @@ export function ResourceRow({
                 >
                   {resource.subjects.name}
                 </Link>
-                {(showCategory || examType || examYear) ? <span aria-hidden="true">·</span> : null}
+                {showCategory || examType || examYear ? <span aria-hidden="true">·</span> : null}
               </>
             ) : null}
             {showCategory ? (
               <>
                 <span>{CATEGORY_META[resource.category].label}</span>
-                {(examType || examYear) ? <span aria-hidden="true">·</span> : null}
+                {examType || examYear ? <span aria-hidden="true">·</span> : null}
               </>
             ) : null}
             {examType ? (
@@ -143,10 +145,7 @@ export function ResourceRow({
       </article>
 
       {/* Google Drive-Style Modal PDF Overlay */}
-      <PdfViewerModal
-        resource={activeModalResource}
-        onClose={() => setActiveModalResource(null)}
-      />
+      <PdfViewerModal resource={activeModalResource} onClose={() => setActiveModalResource(null)} />
     </>
   );
 }
