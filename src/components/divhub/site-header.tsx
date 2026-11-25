@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { AnnouncementsMenu } from "./announcements-menu";
 import { ThemeToggle } from "./theme-toggle";
 import { Logo } from "./logo";
 
@@ -33,7 +34,8 @@ export function SiteHeader() {
               {link.label}
             </Link>
           ))}
-          <div className="ml-1 border-l border-hairline pl-2 sm:pl-3">
+          <div className="ml-1 flex items-center border-l border-hairline pl-1 sm:pl-2">
+            <AnnouncementsMenu />
             <ThemeToggle />
           </div>
         </nav>
