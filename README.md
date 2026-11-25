@@ -42,8 +42,6 @@ Drive setup:
 
 Use a Shared Drive when the folder is owned by a Workspace account.
 
-Lab programs are at `/practicals`.
-
 ## Takedown
 
 Educational use by the MITAOE community. To correct or remove material, email [space.mitaoe@gmail.com](mailto:space.mitaoe@gmail.com).

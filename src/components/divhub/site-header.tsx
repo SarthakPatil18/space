@@ -69,9 +69,6 @@ export function SiteFooter() {
           <Link to="/terms" className="text-mute hover:text-ink transition-colors">
             Terms of Service
           </Link>
-          <Link to="/practicals" className="text-mute hover:text-ink transition-colors">
-            Practicals
-          </Link>
         </div>
       </div>
     </footer>
