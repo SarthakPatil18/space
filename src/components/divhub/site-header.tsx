@@ -1,5 +1,4 @@
 import { Link } from "@tanstack/react-router";
-import { AnnouncementsMenu } from "./announcements-menu";
 import { ThemeToggle } from "./theme-toggle";
 import { Logo } from "./logo";
 
@@ -7,7 +6,6 @@ const navLinks = [
   { to: "/", label: "Home" },
   { to: "/subjects", label: "Subjects" },
   { to: "/search", label: "Search" },
-  { to: "/practicals", label: "Practicals" },
   { to: "/contribute", label: "Contribute" },
 ];
 
@@ -35,8 +33,7 @@ export function SiteHeader() {
               {link.label}
             </Link>
           ))}
-          <div className="ml-1 flex items-center border-l border-hairline pl-1 sm:pl-2">
-            <AnnouncementsMenu />
+          <div className="ml-1 border-l border-hairline pl-2 sm:pl-3">
             <ThemeToggle />
           </div>
         </nav>

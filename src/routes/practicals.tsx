@@ -1,10 +1,18 @@
 import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Check, Copy, Search, X } from "lucide-react";
+import katex from "katex";
+import "katex/dist/katex.min.css";
 import { SiteFooter, SiteHeader } from "@/components/divhub/site-header";
 import { Breadcrumbs } from "@/components/divhub/ui-bits";
-import { morePrograms, moreProgramsCode } from "@/lib/more-programs";
-import { practicals, programText, type Practical, type Program } from "@/lib/practicals";
+import {
+  blockText,
+  practicals,
+  programText,
+  type Block,
+  type Practical,
+  type Program,
+} from "@/lib/practicals";
 
 export const Route = createFileRoute("/practicals")({
   head: () => ({
@@ -13,12 +21,12 @@ export const Route = createFileRoute("/practicals")({
       {
         name: "description",
         content:
-          "DSA lab programs for arrays, hashing, sorting, linked lists, stacks, queues, trees, and graphs.",
+          "Lab programs for linear algebra, probability, hypothesis testing, Markov chains, correlation, regression, and numerical methods.",
       },
       { property: "og:title", content: "Practicals — SPACE" },
       {
         property: "og:description",
-        content: "Each practical, with its title and the code.",
+        content: "Each practical program, with its name, formula, and code.",
       },
       { property: "og:type", content: "website" },
     ],
@@ -26,38 +34,22 @@ export const Route = createFileRoute("/practicals")({
   component: PracticalsPage,
 });
 
-function combinedCode() {
-  return practicals
-    .map((practical) => {
-      const heading =
-        practical.number === "A"
-          ? `Additional — ${practical.title}`
-          : `Practical ${practical.number} — ${practical.title}`;
+function Formula({ tex }: { tex: string }) {
+  const html = katex.renderToString(tex, {
+    throwOnError: false,
+    displayMode: true,
+    output: "html",
+  });
 
-      return practical.programs
-        .map((item, index) => {
-          const name = practical.programs.length > 1 ? `${index + 1}. ${item.name}` : item.name;
-          return `/* ${heading}\n   ${name} */\n\n${item.code}`;
-        })
-        .join("\n\n");
-    })
-    .join("\n\n");
+  return (
+    <div
+      className="mt-4 overflow-x-auto rounded-xl border border-hairline bg-card px-4 py-5 text-center text-ink [&_.katex]:text-ink"
+      dangerouslySetInnerHTML={{ __html: html }}
+    />
+  );
 }
 
-const everyProgram = combinedCode();
-const everyMoreProgram = moreProgramsCode();
-
-function CodeBox({
-  code,
-  label,
-  copyLabel = "Copy",
-  tall = false,
-}: {
-  code: string;
-  label: string;
-  copyLabel?: string;
-  tall?: boolean;
-}) {
+function CodeBox({ code, label }: { code: string; label: string }) {
   const [copied, setCopied] = useState(false);
 
   async function copyCode() {
@@ -74,7 +66,7 @@ function CodeBox({
     <div className="mt-4 overflow-hidden rounded-xl border border-hairline bg-card">
       <div className="flex items-center justify-between gap-3 border-b border-hairline bg-hairline-soft/70 px-3 py-2 sm:px-4">
         <span className="font-mono text-[11px] font-medium uppercase tracking-[0.08em] text-mute">
-          C++
+          Python
         </span>
         <button
           type="button"
@@ -87,17 +79,113 @@ function CodeBox({
           ) : (
             <Copy className="size-3.5" aria-hidden="true" />
           )}
-          {copied ? "Copied" : copyLabel}
+          {copied ? "Copied" : "Copy"}
         </button>
       </div>
-      <pre
-        className={`overflow-x-auto px-3 py-4 sm:px-5 sm:py-5 ${tall ? "max-h-[70vh] overflow-y-auto" : ""}`}
-      >
-        <code className="block font-mono text-[12.5px] leading-6 text-ink sm:text-[13px]">
-          {code}
-        </code>
+      <pre className="overflow-x-auto px-3 py-4 sm:px-5 sm:py-5">
+        <code className="block font-mono text-[12.5px] leading-6 text-ink sm:text-[13px]">{code}</code>
       </pre>
     </div>
+  );
+}
+
+function SampleBlock({ title, text }: { title: string; text: string }) {
+  return (
+    <div className="mt-4 overflow-hidden rounded-xl border border-hairline bg-hairline-soft/50">
+      <p className="border-b border-hairline px-4 py-2 font-mono text-[11px] font-medium uppercase tracking-[0.08em] text-mute">
+        {title}
+      </p>
+      <pre className="overflow-x-auto px-4 py-3 font-mono text-[12.5px] leading-6 text-ink whitespace-pre-wrap">
+        {text}
+      </pre>
+    </div>
+  );
+}
+
+function Points({ title, items }: { title?: string; items: string[] }) {
+  return (
+    <div className="mt-4">
+      {title ? <h4 className="text-sm font-semibold text-ink">{title}</h4> : null}
+      <ul className={`space-y-1.5 ${title ? "mt-2" : ""}`}>
+        {items.map((item) => (
+          <li key={item} className="flex gap-2 text-sm leading-relaxed text-body">
+            <span className="mt-[7px] size-1 shrink-0 rounded-full bg-mute" aria-hidden="true" />
+            <span>{item}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function InfoTable({
+  title,
+  headers,
+  rows,
+}: {
+  title?: string;
+  headers: [string, string];
+  rows: [string, string][];
+}) {
+  return (
+    <div className="mt-4 overflow-hidden rounded-xl border border-hairline bg-card">
+      {title ? (
+        <p className="border-b border-hairline px-4 py-2.5 text-sm font-semibold text-ink">{title}</p>
+      ) : null}
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[28rem] text-left text-sm">
+          <thead>
+            <tr className="border-b border-hairline bg-hairline-soft/70">
+              {headers.map((header) => (
+                <th key={header} className="px-4 py-2.5 font-medium text-mute">
+                  {header}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row) => (
+              <tr key={row.join("|")} className="border-b border-hairline last:border-0">
+                <th scope="row" className="px-4 py-2.5 align-top font-medium text-ink">
+                  {row[0]}
+                </th>
+                <td className="px-4 py-2.5 align-top text-body">{row[1]}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function Blocks({ blocks, label }: { blocks: Block[]; label: string }) {
+  return (
+    <>
+      {blocks.map((block, index) => {
+        const key = `${label}-${index}`;
+        switch (block.type) {
+          case "text":
+            return (
+              <p key={key} className="mt-3 text-sm leading-relaxed text-body">
+                {block.text}
+              </p>
+            );
+          case "formula":
+            return <Formula key={key} tex={block.tex} />;
+          case "code":
+            return <CodeBox key={key} code={block.code} label={label} />;
+          case "points":
+            return <Points key={key} title={block.title} items={block.items} />;
+          case "table":
+            return (
+              <InfoTable key={key} title={block.title} headers={block.headers} rows={block.rows} />
+            );
+          case "sample":
+            return <SampleBlock key={key} title={block.title} text={block.text} />;
+        }
+      })}
+    </>
   );
 }
 
@@ -108,7 +196,9 @@ function matchesQuery(value: string, query: string) {
 function titleHit(practical: Practical, query: string) {
   if (matchesQuery(practical.title, query)) return true;
   const compact = query.replace(/^practical\s+/, "").trim();
-  return compact === practical.number.toLowerCase();
+  const padded = practical.number.toLowerCase();
+  const plain = String(Number(practical.number));
+  return compact === padded || compact === plain;
 }
 
 function visiblePracticals(query: string): Practical[] {
@@ -116,47 +206,54 @@ function visiblePracticals(query: string): Practical[] {
   if (!q) return practicals;
 
   return practicals.flatMap((practical) => {
-    if (
-      titleHit(practical, q) ||
-      matchesQuery(practical.summary, q) ||
-      matchesQuery(practical.note ?? "", q)
-    ) {
-      return [practical];
+    if (titleHit(practical, q)) return [practical];
+
+    const programs = practical.programs.filter((program) => matchesQuery(programText(program), q));
+    const after = (practical.after ?? []).filter((block) => matchesQuery(blockText(block), q));
+    const summaryHit = matchesQuery(practical.summary, q);
+
+    if (programs.length === 0 && after.length === 0) {
+      return summaryHit ? [practical] : [];
     }
 
-    const programs = practical.programs.filter((item) => matchesQuery(programText(item), q));
-    return programs.length > 0 ? [{ ...practical, programs }] : [];
+    return [
+      {
+        ...practical,
+        programs,
+        after: after.length > 0 ? after : undefined,
+      },
+    ];
   });
 }
 
 function PracticalSection({ practical }: { practical: Practical }) {
-  const label = practical.number === "A" ? "Additional" : `Practical ${practical.number}`;
-
   return (
     <section aria-labelledby={`practical-${practical.number}`} className="scroll-mt-28">
-      <p className="eyebrow">{label}</p>
+      <p className="eyebrow">Practical {practical.number}</p>
       <h2
         id={`practical-${practical.number}`}
-        className="mt-2 text-2xl font-bold tracking-tight text-ink sm:text-3xl"
+        className="mt-2 text-2xl sm:text-3xl font-bold tracking-tight text-ink"
       >
         {practical.title}
       </h2>
       <p className="mt-3 max-w-2xl text-[15px] leading-relaxed text-body">{practical.summary}</p>
-      {practical.note ? (
-        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-body">{practical.note}</p>
-      ) : null}
 
       <div className="mt-8 space-y-10">
-        {practical.programs.map((item, index) => (
+        {practical.programs.map((program, index) => (
           <ProgramArticle
-            key={item.name}
+            key={program.name}
             practicalNumber={practical.number}
             index={index}
-            program={item}
-            showHeading={practical.programs.length > 1 || item.name !== practical.title}
+            program={program}
           />
         ))}
       </div>
+
+      {practical.after?.length ? (
+        <div className="mt-10">
+          <Blocks blocks={practical.after} label={`Practical ${practical.number} notes`} />
+        </div>
+      ) : null}
     </section>
   );
 }
@@ -165,31 +262,24 @@ function ProgramArticle({
   practicalNumber,
   index,
   program,
-  showHeading,
 }: {
   practicalNumber: string;
   index: number;
   program: Program;
-  showHeading: boolean;
 }) {
-  const id = `program-${practicalNumber}-${index + 1}`;
+  const number = String(index + 1).padStart(2, "0");
+  const title = `Program ${index + 1}: ${program.name}`;
+  const id = `program-${practicalNumber}-${number}`;
 
   return (
-    <article aria-labelledby={showHeading ? id : undefined} className="scroll-mt-28">
-      {showHeading ? (
-        <div className="flex items-baseline gap-3">
-          <span className="font-mono text-[12px] font-medium tabular-nums text-mute">
-            {index + 1}.
-          </span>
-          <h3 id={id} className="text-lg font-semibold tracking-tight text-ink sm:text-xl">
-            {program.name}
-          </h3>
-        </div>
-      ) : null}
-      {program.note ? (
-        <p className="mt-2 text-sm leading-relaxed text-body">{program.note}</p>
-      ) : null}
-      <CodeBox code={program.code} label={program.name} />
+    <article aria-labelledby={id} className="scroll-mt-28">
+      <div className="flex items-baseline gap-3">
+        <span className="font-mono text-[12px] font-medium tabular-nums text-mute">{number}</span>
+        <h3 id={id} className="text-lg sm:text-xl font-semibold tracking-tight text-ink">
+          {title}
+        </h3>
+      </div>
+      <Blocks blocks={program.blocks} label={title} />
     </article>
   );
 }
@@ -201,35 +291,17 @@ function PracticalsPage() {
   const total = practicals.reduce((count, practical) => count + practical.programs.length, 0);
 
   return (
-    <div className="flex min-h-screen flex-col bg-background">
+    <div className="min-h-screen flex flex-col bg-background">
       <SiteHeader />
-      <main className="container-page flex-1 px-4 py-10 sm:px-6 sm:py-14">
+      <main className="container-page flex-1 py-10 sm:py-14 px-4 sm:px-6">
         <div className="max-w-3xl">
           <Breadcrumbs items={[{ label: "Home", to: "/" }, { label: "Practicals" }]} />
 
           <p className="eyebrow">Lab programs</p>
-          <h1 className="mt-2 text-3xl font-bold tracking-tight text-ink sm:text-4xl">
-            Practicals
-          </h1>
+          <h1 className="mt-2 text-3xl sm:text-4xl font-bold tracking-tight text-ink">Practicals</h1>
           <p className="mt-3 max-w-xl text-[15px] leading-relaxed text-body">
-            Nine practicals, plus three extra programs. Each one is listed with its title and the
-            code.
+            Six practicals. Each program is listed on its own, with the formula and the code.
           </p>
-
-          <nav aria-label="Practicals" className="mt-6">
-            <ol className="flex flex-wrap gap-2">
-              {practicals.map((practical) => (
-                <li key={practical.number}>
-                  <a
-                    href={`#practical-${practical.number}`}
-                    className="inline-flex rounded-full border border-hairline px-3 py-1 text-[12px] font-medium text-body transition-colors hover:bg-hairline-soft hover:text-ink"
-                  >
-                    {practical.number === "A" ? "Additional" : practical.number}
-                  </a>
-                </li>
-              ))}
-            </ol>
-          </nav>
 
           <form
             role="search"
@@ -241,7 +313,7 @@ function PracticalsPage() {
             </label>
             <div className="relative">
               <Search
-                className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-mute"
+                className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-mute"
                 aria-hidden="true"
               />
               <input
@@ -249,14 +321,14 @@ function PracticalsPage() {
                 type="search"
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
-                placeholder="Search practicals, hashing, queue, BST..."
-                className="h-11 w-full rounded-xl border border-hairline bg-card pr-10 pl-10 text-sm text-ink placeholder:text-mute focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                placeholder="Search practicals, binomial, Markov, regression..."
+                className="h-11 w-full rounded-xl border border-hairline bg-card pl-10 pr-10 text-sm text-ink placeholder:text-mute focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
               />
               {query ? (
                 <button
                   type="button"
                   onClick={() => setQuery("")}
-                  className="absolute top-1/2 right-2 -translate-y-1/2 rounded-full p-1.5 text-mute transition-colors hover:text-ink"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-1.5 text-mute transition-colors hover:text-ink"
                   aria-label="Clear search"
                 >
                   <X className="size-3.5" aria-hidden="true" />
@@ -265,7 +337,9 @@ function PracticalsPage() {
             </div>
             {query.trim() ? (
               <p className="mt-2 text-xs text-mute" aria-live="polite">
-                {shown === 0 ? "No programs match that search." : `${shown} of ${total} programs`}
+                {shown === 0
+                  ? "No programs match that search."
+                  : `${shown} of ${total} programs`}
               </p>
             ) : null}
           </form>
@@ -273,8 +347,7 @@ function PracticalsPage() {
 
         {results.length === 0 ? (
           <p className="mt-8 max-w-3xl text-sm text-body">
-            Nothing matched “{query.trim()}”. Try a practical number, a program name, or a word from
-            the code.
+            Nothing matched “{query.trim()}”. Try a practical number, a program name, or a word from the code.
           </p>
         ) : (
           <div className="mt-8 max-w-3xl space-y-16">
@@ -283,44 +356,6 @@ function PracticalsPage() {
             ))}
           </div>
         )}
-
-        <section aria-labelledby="all-codes" className="mt-16 max-w-3xl scroll-mt-28">
-          <p className="eyebrow">All programs</p>
-          <h2
-            id="all-codes"
-            className="mt-2 text-2xl font-bold tracking-tight text-ink sm:text-3xl"
-          >
-            Every program
-          </h2>
-          <p className="mt-3 max-w-xl text-[15px] leading-relaxed text-body">
-            All {total} programs in one place. Copy takes the whole file.
-          </p>
-          <CodeBox code={everyProgram} label="all programs" copyLabel="Copy all" tall />
-        </section>
-
-        <section aria-labelledby="more-codes" className="mt-16 max-w-3xl scroll-mt-28">
-          <p className="eyebrow">More programs</p>
-          <h2
-            id="more-codes"
-            className="mt-2 text-2xl font-bold tracking-tight text-ink sm:text-3xl"
-          >
-            Every program
-          </h2>
-          <p className="mt-3 max-w-xl text-[15px] leading-relaxed text-body">
-            Hashing, linked lists, and the student record tree. Copy takes this whole set.
-          </p>
-          <ol className="mt-4 flex flex-wrap gap-2">
-            {morePrograms.map((item) => (
-              <li
-                key={item.id}
-                className="rounded-full border border-hairline px-3 py-1 font-mono text-[12px] text-body"
-              >
-                {item.id}. {item.name}
-              </li>
-            ))}
-          </ol>
-          <CodeBox code={everyMoreProgram} label="more programs" copyLabel="Copy all" tall />
-        </section>
       </main>
       <SiteFooter />
     </div>
