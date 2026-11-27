@@ -7,6 +7,7 @@ const navLinks = [
   { to: "/", label: "Home" },
   { to: "/subjects", label: "Subjects" },
   { to: "/search", label: "Search" },
+  { to: "/practicals", label: "Practicals" },
   { to: "/contribute", label: "Contribute" },
 ];
 
@@ -70,6 +71,9 @@ export function SiteFooter() {
           </Link>
           <Link to="/terms" className="text-mute hover:text-ink transition-colors">
             Terms of Service
+          </Link>
+          <Link to="/practicals" className="text-mute hover:text-ink transition-colors">
+            Practicals
           </Link>
         </div>
       </div>
